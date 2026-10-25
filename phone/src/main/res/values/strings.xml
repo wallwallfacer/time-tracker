@@ -11,4 +11,12 @@
     <string name="empty_hint">Press Mark, or bind the side button\'s double press to “Mark”.</string>
     <string name="deleted_point">Point deleted</string>
     <string name="undo">Undo</string>
+    <string name="new_tag">+ New tag</string>
+    <string name="insert_point">Insert a point in the middle</string>
+    <string name="delete_start">Delete start point</string>
+    <string name="note_hint">Note (optional)</string>
+    <string name="tap_to_change">%1$s · tap a time to change it</string>
+    <string name="tag_name">Tag name</string>
+    <string name="tag_exists">A tag with this name already exists</string>
+    <string name="now">now</string>
 </resources>
