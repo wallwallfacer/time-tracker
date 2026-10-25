@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 /** Process-wide scope for the Data Layer write; outlives any single activity instance. */
 private object MarkScope : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-private class Shown(val now: Long, val prev: Long?)
+private class Shown(val now: Long, val prev: Long?, val recorded: Boolean)
 
 /** Home-key double-press target: sends a point, vibrates, shows a 3 s confirmation, then removes itself. */
 class MarkActivity : ComponentActivity() {
@@ -39,7 +39,7 @@ class MarkActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         store = LatestStore(applicationContext)
         dataClient = Wearable.getDataClient(applicationContext)
-        setContent { shown?.let { ConfirmScreen(it.now, it.prev) } }
+        setContent { shown?.let { ConfirmScreen(it.now, it.prev, it.recorded) } }
         if (LaunchDecision.shouldRecord(savedInstanceState == null, fromNewIntent = false)) record()
         else finishAndRemoveTask() // recreation: nothing to show, don't leave an invisible activity on top
     }
@@ -59,25 +59,30 @@ class MarkActivity : ComponentActivity() {
         val id = UUID.randomUUID().toString()
         // The write runs on a process-wide scope so rotation/finish never cancels it.
         // The lambda captures only the locals above, never the activity.
-        val prev = MarkScope.async {
+        val outcome = MarkScope.async {
             // A failing store read degrades to "no previous point"; it must never block the send.
             val prev = runCatching { store.get() } // read before updating
                 .onFailure { Log.w(TAG, "Failed to read latest point", it) }
                 .getOrNull()
-            try {
+            val sent = try {
                 PointSender.send(dataClient, now, id)
+                true
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to send point $id", e)
+                false
             }
-            runCatching { store.setIfNewer(now) }
-                .onFailure { Log.w(TAG, "Failed to store latest point", it) }
-            ComplicationUpdater.requestUpdate(appContext)
-            prev
+            if (sent) {
+                runCatching { store.setIfNewer(now) }
+                    .onFailure { Log.w(TAG, "Failed to store latest point", it) }
+            }
+            runCatching { ComplicationUpdater.requestUpdate(appContext) }
+                .onFailure { Log.w(TAG, "Failed to request complication update", it) }
+            Shown(now, prev, sent)
         }
         lifecycleScope.launch {
-            val previousAt = prev.await()
-            vibrate()
-            shown = Shown(now, previousAt)
+            val result = outcome.await()
+            vibrate(result.recorded)
+            shown = result
             finishJob?.cancel()
             finishJob = launch {
                 delay(3000)
@@ -86,8 +91,13 @@ class MarkActivity : ComponentActivity() {
         }
     }
 
-    private fun vibrate() {
-        val effect = VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE)
+    /** One short pulse when recorded; two 150 ms pulses when the write failed. */
+    private fun vibrate(recorded: Boolean) {
+        val effect = if (recorded) {
+            VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE)
+        } else {
+            VibrationEffect.createWaveform(longArrayOf(0, 150, 100, 150), -1)
+        }
         getSystemService(VibratorManager::class.java).defaultVibrator.vibrate(effect)
     }
 

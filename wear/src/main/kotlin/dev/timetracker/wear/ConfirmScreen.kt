@@ -16,8 +16,9 @@ import dev.timetracker.core.formatDuration
 import dev.timetracker.core.formatTime
 import java.time.ZoneId
 
+/** [recorded] false means the write failed: say so and skip the previous-block line. */
 @Composable
-fun ConfirmScreen(now: Long, prev: Long?) {
+fun ConfirmScreen(now: Long, prev: Long?, recorded: Boolean) {
     MaterialTheme {
         Column(
             modifier = Modifier.fillMaxSize().background(Color.Black),
@@ -25,8 +26,8 @@ fun ConfirmScreen(now: Long, prev: Long?) {
             verticalArrangement = Arrangement.Center,
         ) {
             Text(formatTime(now, ZoneId.systemDefault()), fontSize = 40.sp)
-            Text("● " + stringResource(R.string.recorded))
-            if (prev != null) Text(stringResource(R.string.previous_block, formatDuration(now - prev)))
+            Text("● " + stringResource(if (recorded) R.string.recorded else R.string.not_recorded))
+            if (recorded && prev != null) Text(stringResource(R.string.previous_block, formatDuration(now - prev)))
         }
     }
 }
