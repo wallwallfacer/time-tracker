@@ -42,7 +42,7 @@ zero-decision; classification is deferred.
 
 ## 3. Constraints
 
-- Galaxy Watch runs Wear OS (Watch4 and later). Physical-key double-press is
+- The owner's watch is a Galaxy Watch6-or-later (Wear OS 4+, One UI Watch 5+). Physical-key double-press is
   a system shortcut the owner binds to an app in the watch's Settings; the OS
   then *launches the app*. There is no API to intercept the key without
   launching. Therefore: **every launch of the watch app records a point**.
@@ -122,10 +122,19 @@ every edit a plain row operation:
 | Label a block | update `tagId` on its start point | — |
 | Delete a point | delete row | the two neighbours merge; the earlier point's label survives |
 | Move a point | update `at` | label travels with the point; constrained to stay strictly between its neighbours |
-| Insert a point inside a block | insert with `at` chosen by owner | the new point copies the split block's `tagId` and `note`, so the second half starts out looking like the first; owner changes one of them |
+| Insert a point inside a block | insert with `at` chosen by owner | the new point is unlabeled; the first half keeps the old label. Same rule as a late-arriving watch point, so there is one insert path |
 
 Idempotency: insert ignores a duplicate `id`. The watch may deliver the same
 DataItem twice; the second is a no-op.
+
+Ordering: sort by `(at, createdAt, id)`. Two points with the same `at` form a
+zero-length block, shown as `0s`; the move constraint is "not before the
+previous point and not after the next" (non-strict), so ties stay legal.
+
+Clocks: `at` is the creating device's wall clock at launch. Both devices sync
+time from the network; skew is at most a second or two and is not corrected.
+A watch point that arrives late (after being offline) keeps its original `at`
+and may split an already-labeled block; it follows the insert rule above.
 
 A day in the UI is local midnight-to-midnight. A block that spans midnight
 appears in both days, visually clipped, with its full label. No special
@@ -143,6 +152,12 @@ Entry points, both chosen by the owner:
    app on tap. Its text shows minutes since the latest known point
    (`/latest`), so the face itself gives the owner a glance at the current
    block length. Low cost on Wear OS; included.
+
+Which launches count: the activity is `singleTop`; a point is written in
+`onCreate` only when `savedInstanceState == null`, and in `onNewIntent` (a
+second double-press while the confirm screen is still up is a real press and
+is recorded). Recreation by the system (process restart, configuration
+change) writes nothing.
 
 Launch sequence (identical for both entries):
 
@@ -174,7 +189,10 @@ Nothing else exists on the watch. No list, no labels, no settings.
 **Capture entry:** side-key double-press, bound in Samsung Settings →
 Advanced features → Side button → Double press → Open app. Same sequence as the
 watch: write to Room directly, vibrate, show the same three-line confirm
-overlay for ~2 s, then finish.
+overlay for ~2 s, then finish. The capture activity sets `showWhenLocked` and
+`turnScreenOn` so it works from a locked phone in a pocket, exactly like the
+camera shortcut it replaces; the same `singleTop` / `savedInstanceState` rule
+as the watch decides which launches count. Verify on a locked device.
 
 **Open question for the builder (resolve with a 10-minute spike before
 building the phone UI):** does Samsung's side-button app picker list
@@ -243,7 +261,9 @@ start_iso,end_iso,duration_sec,tag,note,source
 
 **Sync receiver:** a `WearableListenerService` (runs without the app open).
 On each `/point/*` DataItem: insert into Room (idempotent), delete the
-DataItem, then write `/latest` with the newest `at` in the database. `/latest`
+DataItem only if the insert succeeded (a failed insert leaves the item in
+place so it is redelivered), then write `/latest` with the newest `at` in the
+database. `/latest`
 is also rewritten after any phone-side insert, delete, or move that changes
 the newest point.
 
@@ -252,9 +272,15 @@ the newest point.
 - Kotlin; Jetpack Compose on the phone; Compose for Wear OS on the watch.
 - Room on the phone; a single DataStore preference on the watch.
 - `play-services-wearable` Data Layer (`DataClient`, `WearableListenerService`).
-- `minSdk`: phone 26; watch 30 (Wear OS 3+, Galaxy Watch4 onward).
-- One Gradle project with two modules: `phone/` and `wear/`, sharing an
-  `applicationId` prefix so the Data Layer pairs them. A tiny `shared/` module
+- `minSdk`: phone 26; watch 33 (Wear OS 4, Galaxy Watch6 onward).
+- One Gradle project with two modules: `phone/` and `wear/`, with the **same
+  `applicationId` and the same signing key** (debug and release), which is what
+  the Data Layer requires to pair them.
+- Distribution: sideload with `adb` (phone over USB, watch over Wi-Fi ADB).
+  No Play Store work in the MVP.
+- UI language: English only, via `strings.xml` with a single default locale.
+  The Chinese strings in the wireframes above are placeholders from the
+  brainstorm mockup. A tiny `shared/` module
   for the Data Layer path constants and the point payload keys, nothing else.
 - No DI framework, no navigation library beyond what Compose needs for two
   screens, no network.
@@ -293,3 +319,10 @@ Listed so the owner can object:
 - Day boundary is local midnight; no "day starts at 4am" setting.
 - Phone-side delete gets an undo snackbar; watch has no undo.
 - CSV is per-block, not per-point.
+- Inserted points (manual or late-arriving) never copy a label.
+- Deleting the very first point in history drops its label and note; allowed.
+- Tag names are unique case-insensitively; the tag-delete confirmation counts
+  points carrying the tag.
+- Times are rendered in the device's current zone; CSV uses the offset at
+  export time. Zone is not stored per point.
+- Phone capture shows over the lock screen.
