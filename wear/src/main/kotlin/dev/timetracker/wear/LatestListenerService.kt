@@ -15,7 +15,7 @@ class LatestListenerService : WearableListenerService() {
                 if (event.type != DataEvent.TYPE_CHANGED || event.dataItem.uri.path != DataLayerContract.LATEST_PATH) continue
                 val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
                 if (!dataMap.containsKey(DataLayerContract.KEY_AT)) continue
-                LatestStore(applicationContext).setIfNewer(dataMap.getLong(DataLayerContract.KEY_AT))
+                LatestStore(applicationContext).set(dataMap.getLong(DataLayerContract.KEY_AT))
                 ComplicationUpdater.requestUpdate(applicationContext)
             }
         }

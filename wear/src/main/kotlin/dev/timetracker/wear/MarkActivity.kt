@@ -72,7 +72,7 @@ class MarkActivity : ComponentActivity() {
                 false
             }
             if (sent) {
-                runCatching { store.setIfNewer(now) }
+                runCatching { store.set(now) }
                     .onFailure { Log.w(TAG, "Failed to store latest point", it) }
             }
             runCatching { ComplicationUpdater.requestUpdate(appContext) }

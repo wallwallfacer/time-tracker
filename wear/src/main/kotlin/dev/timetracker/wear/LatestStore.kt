@@ -14,12 +14,12 @@ class LatestStore(context: Context) {
 
     suspend fun get(): Long? = store.data.first()[KEY]
 
-    /** Writes only when [at] is newer than the stored value (or nothing is stored). */
-    suspend fun setIfNewer(at: Long) {
-        store.edit { prefs ->
-            val current = prefs[KEY]
-            if (current == null || at > current) prefs[KEY] = at
-        }
+    /**
+     * Overwrites the stored value. The phone's `/latest` is authoritative (a deleted press must stop
+     * counting), and a successful local send writes its own time so an offline mark shows at once.
+     */
+    suspend fun set(at: Long) {
+        store.edit { it[KEY] = at }
     }
 
     private companion object {

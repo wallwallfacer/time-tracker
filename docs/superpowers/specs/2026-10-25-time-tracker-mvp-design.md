@@ -179,8 +179,10 @@ Confirm screen (non-interactive):
       └─────────────┘
 ```
 
-`latestKnownPointAt` = max(own last mark, `/latest` from phone), kept in a
-single DataStore preference. If no previous point is known, omit the third line.
+`latestKnownPointAt` = the most recent write of either the watch's own
+successful mark or `/latest` from the phone (each overwrites; the phone is
+authoritative, so deleting an accidental press stops the watch counting from
+it), kept in a single DataStore preference. If no previous point is known, omit the third line.
 
 Nothing else exists on the watch. No list, no labels, no settings.
 
