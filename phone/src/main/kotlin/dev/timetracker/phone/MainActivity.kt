@@ -2,12 +2,14 @@ package dev.timetracker.phone
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.initializer
@@ -19,6 +21,8 @@ import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.sync.LatestPublisher
 import dev.timetracker.phone.ui.LabelSheet
 import dev.timetracker.phone.ui.LabelSheetViewModel
+import dev.timetracker.phone.ui.SettingsScreen
+import dev.timetracker.phone.ui.SettingsViewModel
 import dev.timetracker.phone.ui.TimeTrackerTheme
 import dev.timetracker.phone.ui.TimelineScreen
 import dev.timetracker.phone.ui.TimelineViewModel
@@ -52,10 +56,24 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val settingsViewModel: SettingsViewModel by viewModels {
+        viewModelFactory {
+            initializer {
+                SettingsViewModel(PointRepository(AppDatabase.get(applicationContext)), zone, System::currentTimeMillis)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             TimeTrackerTheme {
+                var screen by rememberSaveable { mutableStateOf("timeline") }
+                if (screen == "settings") {
+                    BackHandler { screen = "timeline" }
+                    SettingsScreen(settingsViewModel, zone, onBack = { screen = "timeline" })
+                    return@TimeTrackerTheme
+                }
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 val points by labelViewModel.points.collectAsStateWithLifecycle()
                 var selectedId by remember { mutableStateOf<String?>(null) }
@@ -69,6 +87,7 @@ class MainActivity : ComponentActivity() {
                     onRowClick = { selectedId = it.start.id },
                     onDeleteRow = { viewModel.deletePoint(it.start.id) },
                     onUndo = viewModel::undoDelete,
+                    onSettings = { screen = "settings" },
                 )
                 // Re-derive from the latest points so the sheet follows edits; dismiss if the block vanished.
                 selectedId?.let { id ->

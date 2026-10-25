@@ -61,5 +61,7 @@ class PointRepository(private val db: AppDatabase, val clock: () -> Long = Syste
     /** Returns the number of points whose tag was cleared. */
     suspend fun deleteTag(id: String): Int = pointDao.clearTag(id).also { tagDao.delete(id) }
 
+    suspend fun countWithTag(tagId: String): Int = pointDao.countWithTag(tagId)
+
     suspend fun newestAt(): Long? = pointDao.newestAt()
 }

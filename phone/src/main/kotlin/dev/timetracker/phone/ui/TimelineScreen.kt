@@ -10,7 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -49,6 +53,7 @@ fun TimelineScreen(
     onRowClick: (Block) -> Unit,
     onDeleteRow: (Block) -> Point,
     onUndo: (Point) -> Unit,
+    onSettings: () -> Unit,
 ) {
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -56,7 +61,7 @@ fun TimelineScreen(
     val undoLabel = stringResource(R.string.undo)
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            DayHeader(state.day, zone, onPrev, onNext, onToday)
+            DayHeader(state.day, zone, onPrev, onNext, onToday, onSettings)
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (state.isEmpty) {
                     Text(
@@ -91,11 +96,12 @@ fun TimelineScreen(
 }
 
 @Composable
-private fun DayHeader(day: LocalDate, zone: ZoneId, onPrev: () -> Unit, onNext: () -> Unit, onToday: () -> Unit) {
+private fun DayHeader(day: LocalDate, zone: ZoneId, onPrev: () -> Unit, onNext: () -> Unit, onToday: () -> Unit, onSettings: () -> Unit) {
     val title = if (day == LocalDate.now(zone)) "${stringResource(R.string.today)} · ${day.format(SHORT_DAY)}" else day.format(OTHER_DAY)
     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         TextButton(onClick = onPrev) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
         Text(title, Modifier.clickable(onClick = onToday).padding(8.dp), style = MaterialTheme.typography.titleLarge)
         TextButton(onClick = onNext) { Text("›", style = MaterialTheme.typography.headlineMedium) }
+        IconButton(onClick = onSettings) { Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings)) }
     }
 }
