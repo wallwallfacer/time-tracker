@@ -1,6 +1,10 @@
 package dev.timetracker.core
 
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
@@ -17,4 +21,22 @@ class EditsTest {
         assertThrows(NoSuchElementException::class.java) { moveBounds(pts, "zzz", 1000) }
     }
     @Test fun `midpoint of block`() = assertEquals(150L, midpoint(Block(pts[0], pts[1], 200)))
+
+    private val utc: ZoneId = ZoneOffset.UTC
+    private fun at(day: Int, h: Int, m: Int) = LocalDateTime.of(2026, 10, day, h, m).atZone(utc).toInstant().toEpochMilli()
+
+    @Test fun `picked time fits on same day`() =
+        assertEquals(at(25, 10, 30), resolvePickedTime(at(25, 10, 0), 10, 30, at(25, 9, 0)..at(25, 11, 0), utc))
+
+    @Test fun `picked time across midnight resolves to next day`() =
+        assertEquals(at(26, 0, 10), resolvePickedTime(at(25, 23, 50), 0, 10, at(25, 22, 0)..at(26, 7, 0), utc))
+
+    @Test fun `picked time across midnight resolves to previous day`() =
+        assertEquals(at(25, 23, 50), resolvePickedTime(at(26, 0, 10), 23, 50, at(25, 22, 0)..at(26, 7, 0), utc))
+
+    @Test fun `picked time outside bounds is null`() =
+        assertNull(resolvePickedTime(at(25, 10, 0), 12, 0, at(25, 9, 0)..at(25, 11, 0), utc))
+
+    @Test fun `empty bounds is null`() =
+        assertNull(resolvePickedTime(at(25, 10, 0), 10, 0, at(25, 11, 0)..at(25, 9, 0), utc))
 }

@@ -10,6 +10,9 @@ import dev.timetracker.core.midpoint
 import dev.timetracker.phone.data.AppDatabase
 import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.sync.LatestPublisher
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -33,6 +36,7 @@ import org.robolectric.annotation.Config
 @Config(sdk = [34])
 class LabelSheetViewModelTest {
     private val now = 1_000L
+    private val utc: ZoneId = ZoneOffset.UTC
 
     private lateinit var db: AppDatabase
     private lateinit var repo: PointRepository
@@ -85,11 +89,20 @@ class LabelSheetViewModelTest {
         assertNull(repo.points.first().first { it.id == "b" }.tagId)
     }
 
-    @Test fun `moveStart clamps to bounds`() = runTest {
+    @Test fun `moveStart out of range leaves point unchanged and emits message`() = runTest {
         val block = threeBlocks()[1]
-        vm.moveStart(block, 50)
-        val moved = repo.points.first { p -> p.first { it.id == "b" }.at != 200L }.first { it.id == "b" }
-        assertEquals(100L, moved.at)
+        vm.moveStart(block, 12, 0, utc) // b sits at 00:00:00.200 on 1970-01-01, between 100 ms and 300 ms
+        vm.moveRejected.first()
+        assertEquals(200L, repo.points.first().first { it.id == "b" }.at)
+    }
+
+    @Test fun `moveStart across midnight resolves next day`() = runTest {
+        fun at(day: Int, h: Int, m: Int) = LocalDateTime.of(2026, 10, day, h, m).atZone(utc).toInstant().toEpochMilli()
+        repo.mark(Source.PHONE, at(25, 22, 0), "a"); repo.mark(Source.PHONE, at(25, 23, 50), "b"); repo.mark(Source.PHONE, at(26, 7, 0), "c")
+        val block = deriveBlocks(repo.points.first(), at(26, 8, 0))[1]
+        vm.moveStart(block, 0, 10, utc)
+        val moved = repo.points.first { p -> p.first { it.id == "b" }.at != at(25, 23, 50) }.first { it.id == "b" }
+        assertEquals(at(26, 0, 10), moved.at)
     }
 
     @Test fun `insertMidpoint creates unlabeled point at midpoint`() = runTest {

@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,8 +39,8 @@ import dev.timetracker.phone.R
 import java.time.ZoneId
 import kotlinx.coroutines.launch
 
-/** A pending time edit: the picker opens on [at]; [after] runs once the picker closes (picked or cancelled). */
-private class TimeEdit(val at: Long, val onPick: (Long) -> Unit, val after: () -> Unit = {})
+/** A pending time edit: the picker opens on [at]; [onPick] gets the picked hour and minute. */
+private class TimeEdit(val at: Long, val onPick: (hour: Int, minute: Int) -> Unit)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -49,6 +50,8 @@ fun LabelSheet(block: Block, vm: LabelSheetViewModel, zone: ZoneId, onDismiss: (
     var note by remember(block.start.id) { mutableStateOf(block.start.note ?: "") }
     var edit by remember { mutableStateOf<TimeEdit?>(null) }
     var newTagOpen by remember { mutableStateOf(false) }
+    var outOfRange by remember { mutableStateOf(false) }
+    LaunchedEffect(vm) { vm.moveRejected.collect { outOfRange = true } }
 
     fun saveNote() {
         if (note.trim() != (block.start.note ?: "")) vm.setNote(block, note)
@@ -61,18 +64,19 @@ fun LabelSheet(block: Block, vm: LabelSheetViewModel, zone: ZoneId, onDismiss: (
     ModalBottomSheet(onDismissRequest = ::close) {
         Column(Modifier.fillMaxWidth().imePadding().padding(horizontal = 16.dp).padding(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { edit = TimeEdit(block.start.at, { vm.moveStart(block, it) }) }) {
+                TextButton(onClick = { edit = TimeEdit(block.start.at, { h, m -> vm.moveStart(block, h, m, zone) }) }) {
                     Text(formatTime(block.start.at, zone), style = MaterialTheme.typography.headlineSmall)
                 }
                 Text("→", style = MaterialTheme.typography.headlineSmall)
                 if (block.end == null) {
                     Text(stringResource(R.string.now), Modifier.padding(horizontal = 12.dp), style = MaterialTheme.typography.headlineSmall)
                 } else {
-                    TextButton(onClick = { edit = TimeEdit(block.endAt, { vm.moveEnd(block, it) }) }) {
+                    TextButton(onClick = { edit = TimeEdit(block.endAt, { h, m -> vm.moveEnd(block, h, m, zone) }) }) {
                         Text(formatTime(block.endAt, zone), style = MaterialTheme.typography.headlineSmall)
                     }
                 }
             }
+            if (outOfRange) Text(stringResource(R.string.move_out_of_range), color = MaterialTheme.colorScheme.error)
             Text(
                 stringResource(R.string.tap_to_change, formatDuration(block.durationMs)),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -91,7 +95,8 @@ fun LabelSheet(block: Block, vm: LabelSheetViewModel, zone: ZoneId, onDismiss: (
                 onClick = {
                     scope.launch {
                         val created = vm.insertMidpoint(block)
-                        edit = TimeEdit(created.at, { vm.moveStart(block.copy(start = created), it) }, after = ::close)
+                        // The sheet stays open on the first half, so a rejected time can be reported.
+                        edit = TimeEdit(created.at) { h, m -> vm.moveStart(block.copy(start = created), h, m, zone) }
                     }
                 },
                 Modifier.fillMaxWidth(),
@@ -115,8 +120,8 @@ fun LabelSheet(block: Block, vm: LabelSheetViewModel, zone: ZoneId, onDismiss: (
         TimePickerDialog(
             initialAt = e.at,
             zone = zone,
-            onConfirm = { e.onPick(it); edit = null; e.after() },
-            onDismiss = { edit = null; e.after() },
+            onConfirm = { h, m -> outOfRange = false; e.onPick(h, m); edit = null },
+            onDismiss = { edit = null },
         )
     }
     if (newTagOpen) {

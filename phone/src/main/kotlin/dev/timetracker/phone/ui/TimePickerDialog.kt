@@ -12,13 +12,12 @@ import java.time.Instant
 import java.time.ZoneId
 
 /**
- * 24-hour time picker seeded with [initialAt]. [onConfirm] gets the picked time on the same local date
- * as [initialAt]; an unchanged hour/minute just dismisses, so seconds are never silently dropped.
- * Clamping to the move bounds is the ViewModel's job.
+ * 24-hour time picker seeded with [initialAt]. [onConfirm] gets the picked hour and minute; an unchanged
+ * hour/minute just dismisses, so seconds are never silently dropped. Choosing the date is the ViewModel's job.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TimePickerDialog(initialAt: Long, zone: ZoneId, onConfirm: (Long) -> Unit, onDismiss: () -> Unit) {
+fun TimePickerDialog(initialAt: Long, zone: ZoneId, onConfirm: (hour: Int, minute: Int) -> Unit, onDismiss: () -> Unit) {
     val initial = Instant.ofEpochMilli(initialAt).atZone(zone)
     val state = rememberTimePickerState(initial.hour, initial.minute, is24Hour = true)
     AlertDialog(
@@ -28,7 +27,7 @@ fun TimePickerDialog(initialAt: Long, zone: ZoneId, onConfirm: (Long) -> Unit, o
                 if (state.hour == initial.hour && state.minute == initial.minute) {
                     onDismiss()
                 } else {
-                    onConfirm(initial.toLocalDate().atTime(state.hour, state.minute).atZone(zone).toInstant().toEpochMilli())
+                    onConfirm(state.hour, state.minute)
                 }
             }) { Text(stringResource(android.R.string.ok)) }
         },

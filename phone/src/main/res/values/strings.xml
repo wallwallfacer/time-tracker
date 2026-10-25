@@ -19,6 +19,7 @@
     <string name="tag_name">Tag name</string>
     <string name="tag_exists">A tag with this name already exists</string>
     <string name="now">now</string>
+    <string name="move_out_of_range">Outside the neighbouring points</string>
     <string name="settings">Settings</string>
     <string name="export_csv">Export CSV</string>
     <string name="rename">Rename</string>

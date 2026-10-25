@@ -7,8 +7,12 @@ import dev.timetracker.core.Point
 import dev.timetracker.core.Tag
 import dev.timetracker.core.midpoint
 import dev.timetracker.core.moveBounds
+import dev.timetracker.core.resolvePickedTime
 import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.sync.LatestPublisher
+import java.time.ZoneId
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -48,16 +52,28 @@ class LabelSheetViewModel(
     fun endBounds(block: Block, all: List<Point>): LongRange? =
         block.end?.let { moveBounds(all, it.id, clock()) }
 
-    fun moveStart(block: Block, at: Long) = move(block.start.id, at) { startBounds(block, it) }
+    // No replay: a rejection nobody is watching (sheet already closed) is dropped, never shown later.
+    private val moveRejections = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
-    fun moveEnd(block: Block, at: Long) {
-        if (block.end != null) move(block.end!!.id, at) { endBounds(block, it)!! }
+    /** Fires when a picked time fits between the neighbours on no nearby date; the point was left unchanged. */
+    val moveRejected: SharedFlow<Unit> = moveRejections
+
+    fun moveStart(block: Block, hour: Int, minute: Int, zone: ZoneId) =
+        move(block.start, hour, minute, zone) { startBounds(block, it) }
+
+    fun moveEnd(block: Block, hour: Int, minute: Int, zone: ZoneId) {
+        block.end?.let { end -> move(end, hour, minute, zone) { endBounds(block, it)!! } }
     }
 
-    /** Reads the latest points inside the coroutine so bounds are never stale or empty. */
-    private fun move(id: String, at: Long, bounds: (List<Point>) -> LongRange) {
+    /** Reads the latest points inside the coroutine so bounds are never stale; never clamps. */
+    private fun move(point: Point, hour: Int, minute: Int, zone: ZoneId, bounds: (List<Point>) -> LongRange) {
         viewModelScope.launch {
-            repo.movePoint(id, at.coerceIn(bounds(repo.points.first())))
+            val at = resolvePickedTime(point.at, hour, minute, bounds(repo.points.first()), zone)
+            if (at == null) {
+                moveRejections.tryEmit(Unit)
+                return@launch
+            }
+            repo.movePoint(point.id, at)
             publisher.publish(repo.newestAt())
         }
     }
