@@ -25,4 +25,5 @@
     <string name="delete">Delete</string>
     <string name="delete_tag_confirm">Remove “%1$s” from %2$d blocks?</string>
     <string name="export_done">Exported</string>
+    <string name="export_failed">Export failed</string>
 </resources>

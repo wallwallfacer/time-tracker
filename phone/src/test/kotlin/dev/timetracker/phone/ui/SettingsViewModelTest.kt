@@ -79,8 +79,9 @@ class SettingsViewModelTest {
         assertEquals(2, vm.deleteCount(work.id))
         vm.deleteTag(work.id)
         advanceUntilIdle()
-        assertTrue(repo.tags.first().isEmpty())
-        assertTrue(repo.points.first().all { it.tagId == null })
+        // Room runs the delete on its own executor, so wait for the flows rather than the test scheduler.
+        repo.tags.first { it.isEmpty() }
+        assertTrue(repo.points.first { p -> p.all { it.tagId == null } }.isNotEmpty())
         assertNull(repo.points.first().first { it.id == "a" }.tagId)
     }
 }

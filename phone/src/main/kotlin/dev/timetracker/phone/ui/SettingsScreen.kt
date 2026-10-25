@@ -1,5 +1,6 @@
 package dev.timetracker.phone.ui
 
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -45,6 +46,7 @@ import dev.timetracker.core.Tag
 import dev.timetracker.phone.R
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -57,6 +59,7 @@ fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
     val context = LocalContext.current
     val snackbar = remember { SnackbarHostState() }
     val exportedMessage = stringResource(R.string.export_done)
+    val failedMessage = stringResource(R.string.export_failed)
     var renaming by remember { mutableStateOf<Tag?>(null) }
     var deleting by remember { mutableStateOf<Pair<Tag, Int>?>(null) }
 
@@ -64,8 +67,18 @@ fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
         if (uri != null) scope.launch {
             val csv = vm.csv()
-            withContext(Dispatchers.IO) { context.contentResolver.openOutputStream(uri)?.use { it.write(csv.toByteArray()) } }
-            snackbar.showSnackbar(exportedMessage)
+            val ok = withContext(Dispatchers.IO) {
+                try {
+                    val out = context.contentResolver.openOutputStream(uri, "wt")
+                    if (out == null) false else { out.use { it.write(csv.toByteArray()) }; true }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Log.w("SettingsScreen", "CSV export failed", e)
+                    false
+                }
+            }
+            snackbar.showSnackbar(if (ok) exportedMessage else failedMessage)
         }
     }
 
