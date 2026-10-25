@@ -21,8 +21,9 @@ import dev.timetracker.core.formatTime
 import dev.timetracker.phone.data.AppDatabase
 import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.sync.LatestPublisher
-import dev.timetracker.phone.sync.markAndPublish
 import java.time.ZoneId
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -51,12 +52,15 @@ class MarkPointActivity : ComponentActivity() {
         val now = repo.clock()
         lifecycleScope.launch {
             val previous = repo.newestAt() // read before inserting
-            repo.markAndPublish(Source.PHONE, publisher, at = now)
+            repo.mark(Source.PHONE, at = now)
             vibrate()
             overlay = OverlayState(
                 time = formatTime(now, ZoneId.systemDefault()),
                 previousBlock = previous?.let { formatDuration(now - it) },
             )
+            // Fire-and-forget on its own scope, not lifecycleScope: the activity finishes after 2 s and
+            // must not cancel an in-flight publish, nor should a slow publish delay feedback or finish.
+            CoroutineScope(Dispatchers.IO).launch { publisher.publish(repo.newestAt()) }
             // Only the timer is cancelled on a repeat press, never an in-flight write.
             finishJob?.cancel()
             finishJob = launch {
