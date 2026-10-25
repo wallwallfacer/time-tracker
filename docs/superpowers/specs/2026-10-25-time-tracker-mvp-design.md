@@ -243,8 +243,8 @@ extra tap. The owner accepts the fallback; the alias path is preferred.
 - Tapping a tag applies it immediately and closes the sheet. No confirm button.
 - Chips ordered by `lastUsedAt` descending. "+ 新标签" asks for a name and
   applies the new tag at once.
-- Tapping a boundary time opens the system time picker, limited to strictly
-  between the neighbouring points; the end time edits the *next* point.
+- Tapping a boundary time opens the system time picker, limited to between the neighbouring points (non-strict); a time that
+  fits no adjacent date is rejected with a message; the end time edits the *next* point.
 - "Insert a point" inserts at the block's midpoint and immediately opens the
   time picker on it.
 - Note is saved on focus loss or sheet close.
