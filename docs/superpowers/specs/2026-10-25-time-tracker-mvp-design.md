@@ -121,7 +121,7 @@ every edit a plain row operation:
 | Mark a point | insert | new block is unlabeled |
 | Label a block | update `tagId` on its start point | — |
 | Delete a point | delete row | the two neighbours merge; the earlier point's label survives |
-| Move a point | update `at` | label travels with the point; constrained to stay strictly between its neighbours |
+| Move a point | update `at` | label travels with the point; constrained to stay between its neighbours (non-strict: `prev.at <= at <= next.at`); a picked time that fits no adjacent date is rejected with a message, never clamped |
 | Insert a point inside a block | insert with `at` chosen by owner | the new point is unlabeled; the first half keeps the old label. Same rule as a late-arriving watch point, so there is one insert path |
 
 Idempotency: insert ignores a duplicate `id`. The watch may deliver the same
