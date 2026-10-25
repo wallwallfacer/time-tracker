@@ -36,4 +36,7 @@ dependencies {
     implementation(libs.wear.compose.material)
     implementation(libs.wear.compose.foundation)
     implementation(libs.activity.compose)
+    implementation(libs.datastore.preferences)
+    implementation(libs.play.services.wearable)
+    implementation(libs.kotlinx.coroutines.play.services)
 }
