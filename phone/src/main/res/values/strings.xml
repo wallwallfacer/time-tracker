@@ -4,4 +4,11 @@
     <string name="mark_alias_label">Mark</string>
     <string name="recorded">Recorded</string>
     <string name="previous_block">Previous block %1$s</string>
+    <string name="today">Today</string>
+    <string name="unlabeled">Unlabeled</string>
+    <string name="in_progress">In progress · %1$s</string>
+    <string name="mark">● Mark</string>
+    <string name="empty_hint">Press Mark, or bind the side button\'s double press to “Mark”.</string>
+    <string name="deleted_point">Point deleted</string>
+    <string name="undo">Undo</string>
 </resources>
