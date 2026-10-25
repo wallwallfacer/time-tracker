@@ -86,7 +86,7 @@ The export has this header:
 start_iso,end_iso,duration_sec,tag,note,source
 ```
 
-- `start_iso`, `end_iso`: ISO 8601 timestamps with the UTC offset in effect at export time.
+- `start_iso`, `end_iso`: ISO 8601 timestamps; each carries its own UTC offset in the device's current time zone (so rows on either side of a DST change show different offsets).
 - `end_iso`: empty for the current (open) block, which is the last row.
 - `duration_sec`: whole seconds.
 - `tag`, `note`: empty when unset. Values containing a comma, quote or line break are wrapped in double quotes.
