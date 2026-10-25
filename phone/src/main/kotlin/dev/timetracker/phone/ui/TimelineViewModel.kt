@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class TimelineRow(val block: ClippedBlock, val tag: Tag?)
@@ -35,24 +34,27 @@ class TimelineViewModel(
     private val zone: ZoneId,
     private val clock: () -> Long,
 ) : ViewModel() {
-    private fun todayDate(): LocalDate = Instant.ofEpochMilli(clock()).atZone(zone).toLocalDate()
+    private fun dateAt(ms: Long): LocalDate = Instant.ofEpochMilli(ms).atZone(zone).toLocalDate()
 
-    private val day = MutableStateFlow(todayDate())
+    /** A pinned date, or null to follow today (so the timeline rolls over at midnight). */
+    private val pinned = MutableStateFlow<LocalDate?>(null)
     private val ticker = flow { while (true) { emit(clock()); delay(1_000) } }
 
     val state: StateFlow<TimelineState> =
-        combine(repo.points, repo.tags, day, ticker) { points, tags, day, now ->
+        combine(repo.points, repo.tags, pinned, ticker) { points, tags, pinned, now ->
+            val day = pinned ?: dateAt(now)
             val start = day.atStartOfDay(zone).toInstant().toEpochMilli()
             val end = day.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
             val tagsById = tags.associateBy { it.id }
             val rows = clipToDay(deriveBlocks(points, now), start, end)
                 .map { TimelineRow(it, tagsById[it.block.start.tagId]) }
             TimelineState(day, rows, points.isEmpty())
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TimelineState(day.value, emptyList(), true))
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TimelineState(dateAt(clock()), emptyList(), true))
 
-    fun previousDay() = day.update { it.minusDays(1) }
-    fun nextDay() = day.update { it.plusDays(1) }
-    fun today() { day.value = todayDate() }
+    private fun shownDay(): LocalDate = pinned.value ?: dateAt(clock())
+    fun previousDay() { pinned.value = shownDay().minusDays(1) }
+    fun nextDay() { pinned.value = shownDay().plusDays(1) }
+    fun today() { pinned.value = null }
 
     fun mark() {
         viewModelScope.launch { repo.markAndPublish(Source.PHONE, publisher) }

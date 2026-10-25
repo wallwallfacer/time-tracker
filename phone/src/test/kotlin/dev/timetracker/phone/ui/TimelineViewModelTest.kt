@@ -106,4 +106,18 @@ class TimelineViewModelTest {
         vm.today()
         assertEquals(4, vm.state.first { it.day == today && it.rows.size == 4 }.rows.size)
     }
+
+    @Test fun `day follows today when not pinned`() = runTest {
+        var clockNow = dayStart + 23 * hour + 59 * 60_000
+        val followVm = TimelineViewModel(repo, LatestPublisher(Wearable.getDataClient(ApplicationProvider.getApplicationContext<android.content.Context>())), zone) { clockNow }
+        assertEquals(today, followVm.state.first { it.day == today }.day)
+        clockNow += 2 * 60_000 // 00:01 the next day
+        assertEquals(today.plusDays(1), followVm.state.first { it.day == today.plusDays(1) }.day)
+
+        followVm.previousDay() // pins a concrete date relative to the resolved day
+        clockNow += 24 * hour
+        assertEquals(today, followVm.state.first { it.day == today }.day)
+        followVm.today()
+        assertEquals(today.plusDays(2), followVm.state.first { it.day == today.plusDays(2) }.day)
+    }
 }
