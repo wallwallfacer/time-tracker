@@ -5,27 +5,39 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import androidx.wear.watchface.complications.data.ComplicationData
+import androidx.wear.watchface.complications.data.ComplicationText
 import androidx.wear.watchface.complications.data.ComplicationType
+import androidx.wear.watchface.complications.data.CountUpTimeReference
 import androidx.wear.watchface.complications.data.PlainComplicationText
 import androidx.wear.watchface.complications.data.ShortTextComplicationData
+import androidx.wear.watchface.complications.data.TimeDifferenceComplicationText
+import androidx.wear.watchface.complications.data.TimeDifferenceStyle
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
-import dev.timetracker.core.formatDuration
+import java.time.Instant
 
 /** Shows the time since the latest known point; tapping it opens [MarkActivity], which records a point. */
 class ElapsedComplicationService : SuspendingComplicationDataSourceService() {
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
         if (request.complicationType != ComplicationType.SHORT_TEXT) return null
         val latest = runCatching { LatestStore(applicationContext).get() }.getOrNull()
-        val text = if (latest != null) formatDuration(System.currentTimeMillis() - latest) else "—"
+        // The system renders a counting-up text, so the value never freezes between updates.
+        val text = if (latest != null) {
+            TimeDifferenceComplicationText.Builder(
+                TimeDifferenceStyle.SHORT_SINGLE_UNIT,
+                CountUpTimeReference(Instant.ofEpochMilli(latest)),
+            ).build()
+        } else {
+            PlainComplicationText.Builder("—").build()
+        }
         return build(text)
     }
 
     override fun getPreviewData(type: ComplicationType): ComplicationData? =
-        if (type == ComplicationType.SHORT_TEXT) build("47m") else null
+        if (type == ComplicationType.SHORT_TEXT) build(PlainComplicationText.Builder("47m").build()) else null
 
-    private fun build(text: String): ComplicationData {
+    private fun build(text: ComplicationText): ComplicationData {
         val tap = PendingIntent.getActivity(
             this,
             0,
@@ -33,7 +45,7 @@ class ElapsedComplicationService : SuspendingComplicationDataSourceService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         return ShortTextComplicationData.Builder(
-            PlainComplicationText.Builder(text).build(),
+            text,
             PlainComplicationText.Builder(getString(R.string.complication_description)).build(),
         ).setTapAction(tap).build()
     }
