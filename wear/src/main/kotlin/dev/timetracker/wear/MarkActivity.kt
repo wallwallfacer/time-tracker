@@ -59,13 +59,17 @@ class MarkActivity : ComponentActivity() {
         // The write runs on a process-wide scope so rotation/finish never cancels it.
         // The lambda captures only the locals above, never the activity.
         val prev = MarkScope.async {
-            val prev = store.get() // read before updating
+            // A failing store read degrades to "no previous point"; it must never block the send.
+            val prev = runCatching { store.get() } // read before updating
+                .onFailure { Log.w(TAG, "Failed to read latest point", it) }
+                .getOrNull()
             try {
                 PointSender.send(dataClient, now, id)
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to send point $id", e)
             }
-            store.setIfNewer(now)
+            runCatching { store.setIfNewer(now) }
+                .onFailure { Log.w(TAG, "Failed to store latest point", it) }
             prev
         }
         lifecycleScope.launch {
