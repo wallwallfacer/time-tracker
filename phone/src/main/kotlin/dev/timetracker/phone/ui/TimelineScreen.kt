@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,27 +18,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import dev.timetracker.core.Block
-import dev.timetracker.core.Point
 import dev.timetracker.phone.R
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlinx.coroutines.launch
 
 private val OTHER_DAY = DateTimeFormatter.ofPattern("EEE, MMM d", Locale.ENGLISH)
 private val SHORT_DAY = DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH)
@@ -51,15 +46,19 @@ fun TimelineScreen(
     onToday: () -> Unit,
     onMark: () -> Unit,
     onRowClick: (Block) -> Unit,
-    onDeleteRow: (Block) -> Point,
-    onUndo: (Point) -> Unit,
+    onDeleteRow: (Block) -> Unit,
     onSettings: () -> Unit,
+    snackbar: SnackbarHostState,
 ) {
-    val snackbar = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-    val deletedMessage = stringResource(R.string.deleted_point)
-    val undoLabel = stringResource(R.string.undo)
-    Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { padding ->
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
+        // In the bottom bar the undo snackbar sits above the button instead of covering it.
+        bottomBar = {
+            Button(onClick = onMark, Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp)) {
+                Text(stringResource(R.string.mark), style = MaterialTheme.typography.titleLarge)
+            }
+        },
+    ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             DayHeader(state.day, zone, onPrev, onNext, onToday, onSettings)
             Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -75,21 +74,11 @@ fun TimelineScreen(
                             TimelineRowItem(
                                 row, zone,
                                 onClick = { onRowClick(row.block.block) },
-                                onLongClick = {
-                                    val removed = onDeleteRow(row.block.block)
-                                    scope.launch {
-                                        snackbar.currentSnackbarData?.dismiss()
-                                        val result = snackbar.showSnackbar(deletedMessage, undoLabel, duration = SnackbarDuration.Short)
-                                        if (result == SnackbarResult.ActionPerformed) onUndo(removed)
-                                    }
-                                },
+                                onLongClick = { onDeleteRow(row.block.block) },
                             )
                         }
                     }
                 }
-            }
-            Button(onClick = onMark, Modifier.fillMaxWidth().padding(16.dp)) {
-                Text(stringResource(R.string.mark), style = MaterialTheme.typography.titleLarge)
             }
         }
     }

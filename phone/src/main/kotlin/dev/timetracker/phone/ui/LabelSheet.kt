@@ -44,7 +44,7 @@ private class TimeEdit(val at: Long, val onPick: (hour: Int, minute: Int) -> Uni
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun LabelSheet(block: Block, vm: LabelSheetViewModel, zone: ZoneId, onDismiss: () -> Unit) {
+fun LabelSheet(block: Block, vm: LabelSheetViewModel, zone: ZoneId, onDeleteStart: (Block) -> Unit, onDismiss: () -> Unit) {
     val tags by vm.tags.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var note by remember(block.start.id) { mutableStateOf(block.start.note ?: "") }
@@ -102,7 +102,7 @@ fun LabelSheet(block: Block, vm: LabelSheetViewModel, zone: ZoneId, onDismiss: (
                 Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.insert_point)) }
             OutlinedButton(
-                onClick = { vm.deleteStart(block); onDismiss() },
+                onClick = { onDeleteStart(block) },
                 Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
             ) { Text(stringResource(R.string.delete_start)) }

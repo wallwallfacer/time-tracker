@@ -67,17 +67,13 @@ class TimelineViewModelTest {
         assertEquals(now, state.rows.last().block.visibleEnd)
     }
 
-    @Test fun `deletePoint returns point and undo restores it`() = runTest {
+    @Test fun `deletePoint removes point and undo restores it`() = runTest {
         markAt("a", dayStart + 9 * hour); markAt("b", dayStart + 10 * hour); markAt("c", dayStart + 11 * hour)
         val tag = repo.createTag("Work")!!
         repo.setTag("b", tag.id); repo.setNote("b", "standup")
-        vm.state.first { it.rows.size == 3 && it.rows[1].tag != null }
+        val removed = vm.state.first { it.rows.size == 3 && it.rows[1].tag != null }.rows[1].block.block.start
 
-        val removed = vm.deletePoint("b")
-        assertEquals("b", removed.id)
-        assertEquals(dayStart + 10 * hour, removed.at)
-        assertEquals(tag.id, removed.tagId)
-        assertEquals("standup", removed.note)
+        vm.deletePoint(removed)
         assertEquals(listOf("a", "c"), vm.state.first { it.rows.size == 2 }.rows.map { it.block.block.start.id })
 
         vm.undoDelete(removed)

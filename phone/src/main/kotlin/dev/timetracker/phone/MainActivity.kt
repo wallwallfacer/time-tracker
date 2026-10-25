@@ -6,17 +6,23 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.google.android.gms.wearable.Wearable
+import dev.timetracker.core.Block
 import dev.timetracker.core.deriveBlocks
 import dev.timetracker.phone.data.AppDatabase
 import dev.timetracker.phone.data.PointRepository
@@ -89,6 +95,20 @@ class MainActivity : ComponentActivity() {
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 val points by labelViewModel.points.collectAsStateWithLifecycle()
                 var selectedId by remember { mutableStateOf<String?>(null) }
+                // One snackbar for every delete (row long-press and the sheet), so both offer undo.
+                val snackbar = remember { SnackbarHostState() }
+                val scope = rememberCoroutineScope()
+                val deletedMessage = stringResource(R.string.deleted_point)
+                val undoLabel = stringResource(R.string.undo)
+                fun deleteWithUndo(block: Block) {
+                    val removed = block.start
+                    viewModel.deletePoint(removed)
+                    scope.launch {
+                        snackbar.currentSnackbarData?.dismiss()
+                        val result = snackbar.showSnackbar(deletedMessage, undoLabel, duration = SnackbarDuration.Short)
+                        if (result == SnackbarResult.ActionPerformed) viewModel.undoDelete(removed)
+                    }
+                }
                 TimelineScreen(
                     state = state,
                     zone = zone,
@@ -97,9 +117,9 @@ class MainActivity : ComponentActivity() {
                     onToday = viewModel::today,
                     onMark = viewModel::mark,
                     onRowClick = { selectedId = it.start.id },
-                    onDeleteRow = { viewModel.deletePoint(it.start.id) },
-                    onUndo = viewModel::undoDelete,
+                    onDeleteRow = ::deleteWithUndo,
                     onSettings = { screen = "settings" },
+                    snackbar = snackbar,
                 )
                 // Re-derive from the latest points so the sheet follows edits; dismiss if the block vanished.
                 selectedId?.let { id ->
@@ -107,7 +127,11 @@ class MainActivity : ComponentActivity() {
                     if (block == null) {
                         LaunchedEffect(id) { selectedId = null }
                     } else {
-                        LabelSheet(block, labelViewModel, zone, onDismiss = { selectedId = null })
+                        LabelSheet(
+                            block, labelViewModel, zone,
+                            onDeleteStart = { deleteWithUndo(it); selectedId = null },
+                            onDismiss = { selectedId = null },
+                        )
                     }
                 }
             }

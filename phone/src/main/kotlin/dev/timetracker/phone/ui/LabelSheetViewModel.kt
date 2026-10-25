@@ -82,10 +82,4 @@ class LabelSheetViewModel(
     suspend fun insertMidpoint(block: Block): Point =
         repo.insertManual(midpoint(block)).also { publisher.publish(repo.newestAt()) }
 
-    fun deleteStart(block: Block) {
-        viewModelScope.launch {
-            repo.deletePoint(block.start.id)
-            publisher.publish(repo.newestAt())
-        }
-    }
 }

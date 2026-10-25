@@ -58,14 +58,12 @@ class TimelineViewModel(
         viewModelScope.launch { repo.markAndPublish(Source.PHONE, publisher) }
     }
 
-    /** Returns the removed point so the caller can offer undo; the delete itself runs asynchronously. */
-    fun deletePoint(id: String): Point {
-        val point = state.value.rows.first { it.block.block.start.id == id }.block.block.start
+    /** Deletes [point] asynchronously; the caller keeps [point] to offer undo. */
+    fun deletePoint(point: Point) {
         viewModelScope.launch {
-            repo.deletePoint(id)
+            repo.deletePoint(point.id)
             publisher.publish(repo.newestAt())
         }
-        return point
     }
 
     /** Re-inserts [p] under its original id, so a redelivered watch point cannot duplicate it. */
