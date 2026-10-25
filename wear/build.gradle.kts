@@ -38,5 +38,6 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.datastore.preferences)
     implementation(libs.play.services.wearable)
+    implementation(libs.wear.watchface.complications.data.source.ktx)
     implementation(libs.kotlinx.coroutines.play.services)
 }

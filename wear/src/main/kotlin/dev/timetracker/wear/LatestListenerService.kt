@@ -16,6 +16,7 @@ class LatestListenerService : WearableListenerService() {
                 val dataMap = DataMapItem.fromDataItem(event.dataItem).dataMap
                 if (!dataMap.containsKey(DataLayerContract.KEY_AT)) continue
                 LatestStore(applicationContext).setIfNewer(dataMap.getLong(DataLayerContract.KEY_AT))
+                ComplicationUpdater.requestUpdate(applicationContext)
             }
         }
     }

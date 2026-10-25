@@ -3,4 +3,5 @@
     <string name="app_name">Time Tracker</string>
     <string name="recorded">Recorded</string>
     <string name="previous_block">Previous block %1$s</string>
+    <string name="complication_description">Time since last mark. Tap to mark.</string>
 </resources>

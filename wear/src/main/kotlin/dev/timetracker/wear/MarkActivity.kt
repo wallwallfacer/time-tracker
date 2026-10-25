@@ -54,6 +54,7 @@ class MarkActivity : ComponentActivity() {
         finishJob?.cancel()
         val store = store
         val dataClient = dataClient
+        val appContext = applicationContext
         val now = System.currentTimeMillis()
         val id = UUID.randomUUID().toString()
         // The write runs on a process-wide scope so rotation/finish never cancels it.
@@ -70,6 +71,7 @@ class MarkActivity : ComponentActivity() {
             }
             runCatching { store.setIfNewer(now) }
                 .onFailure { Log.w(TAG, "Failed to store latest point", it) }
+            ComplicationUpdater.requestUpdate(appContext)
             prev
         }
         lifecycleScope.launch {
