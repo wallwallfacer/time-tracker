@@ -1,6 +1,7 @@
 package dev.timetracker.phone
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -12,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.google.android.gms.wearable.Wearable
@@ -19,6 +21,7 @@ import dev.timetracker.core.deriveBlocks
 import dev.timetracker.phone.data.AppDatabase
 import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.sync.LatestPublisher
+import dev.timetracker.phone.sync.PointItemConsumer
 import dev.timetracker.phone.ui.LabelSheet
 import dev.timetracker.phone.ui.LabelSheetViewModel
 import dev.timetracker.phone.ui.SettingsScreen
@@ -27,6 +30,7 @@ import dev.timetracker.phone.ui.TimeTrackerTheme
 import dev.timetracker.phone.ui.TimelineScreen
 import dev.timetracker.phone.ui.TimelineViewModel
 import java.time.ZoneId
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val zone = ZoneId.systemDefault()
@@ -61,6 +65,14 @@ class MainActivity : ComponentActivity() {
             initializer {
                 SettingsViewModel(PointRepository(AppDatabase.get(applicationContext)), zone, System::currentTimeMillis)
             }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        lifecycleScope.launch {
+            runCatching { PointItemConsumer.sweep(applicationContext) }
+                .onFailure { Log.w(TAG, "Failed to sweep leftover watch points", it) }
         }
     }
 
@@ -100,5 +112,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private companion object {
+        const val TAG = "MainActivity"
     }
 }

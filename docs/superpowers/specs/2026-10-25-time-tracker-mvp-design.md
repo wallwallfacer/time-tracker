@@ -262,7 +262,8 @@ start_iso,end_iso,duration_sec,tag,note,source
 **Sync receiver:** a `WearableListenerService` (runs without the app open).
 On each `/point/*` DataItem: insert into Room (idempotent), delete the
 DataItem only if the insert succeeded (a failed insert leaves the item in
-place so it is redelivered), then write `/latest` with the newest `at` in the
+place; the Data Layer does not redeliver it, so leftover `/point/*` items are
+consumed by a sweep whenever the phone app comes to the foreground), then write `/latest` with the newest `at` in the
 database. `/latest`
 is also rewritten after any phone-side insert, delete, or move that changes
 the newest point.
