@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Icon Candidates</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght,ROND@400..700,100&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#EEEBF3; --ink:#1B1B21; --muted:#5A5966; --card:#FBF8FF; }
+  * { box-sizing:border-box; margin:0 }
+  body { background:var(--bg); color:var(--ink); font:15px/1.45 "Google Sans Flex",system-ui,sans-serif; padding:40px 32px 64px }
+  h1 { font-size:44px; font-weight:650; letter-spacing:-.02em }
+  .lead { color:var(--muted); max-width:72ch; margin:8px 0 28px }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:24px }
+  .c { background:var(--card); border-radius:28px; padding:22px }
+  .c h2 { font-size:22px; font-weight:650 } .c p { color:var(--muted); font-size:14px; margin:4px 0 16px; min-height:60px }
+  .row { display:flex; gap:18px; align-items:flex-end; flex-wrap:wrap }
+  .cell { display:flex; flex-direction:column; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:var(--muted) }
+  .sq svg { width:96px; height:96px; clip-path:inset(0 round 30%) }      /* One UI squircle-ish mask */
+  .ci svg { width:72px; height:72px; clip-path:circle(50%) }            /* circle mask */
+  .mono svg { width:72px; height:72px; clip-path:inset(0 round 30%) }
+  .watch { width:110px; height:110px; border-radius:50%; background:#000; display:grid; place-items:center; box-shadow:0 0 0 6px #2A2A30 }
+  .watch svg { width:64px; height:64px; clip-path:circle(50%) }
+  .home { margin-top:16px; background:linear-gradient(160deg,#c9d2ff,#f2d6e4); border-radius:18px; padding:14px; display:flex; gap:18px }
+  .home .cell { color:#1B1B21 } .home svg { width:56px; height:56px; clip-path:inset(0 round 30%) }
+</style>
+</head>
+<body>
+<h1>App icon — candidates</h1>
+<p class="lead">All built from the Rail redesign: the point (dot), the rail, the M3 seed #4355B9 and the tag tones. Each shows the phone launcher (One UI squircle + circle masks), a themed/monochrome icon (Android 13+), the watch app launcher, and the phone home screen with both entries: <b>Time Tracker</b> and <b>Mark</b> (the side-button alias gets its own icon).</p>
+
+<!-- Shared symbols, 108x108 adaptive-icon canvas; keep content within the central 66 safe zone (21..87). -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+      <rect width="5" height="5" fill="none"/><rect width="2" height="5" fill="#777680"/>
+    </pattern>
+
+    <!-- A · Rail: three points on a rail, tag-colored segments, the live point last -->
+    <symbol id="A" viewBox="0 0 108 108">
+      <rect width="108" height="108" fill="#DEE0FF"/>
+      <rect x="49" y="34" width="10" height="18" rx="5" fill="#1E88E5"/>
+      <rect x="49" y="58" width="10" height="14" rx="5" fill="#D98200"/>
+      <circle cx="54" cy="31" r="6.5" fill="#1B1B21" stroke="#DEE0FF" stroke-width="3"/>
+      <circle cx="54" cy="55" r="6.5" fill="#1B1B21" stroke="#DEE0FF" stroke-width="3"/>
+      <circle cx="54" cy="76" r="9" fill="#4355B9" stroke="#DEE0FF" stroke-width="3"/>
+    </symbol>
+    <symbol id="A-mono" viewBox="0 0 108 108">
+      <rect width="108" height="108" fill="#E3E1E9"/>
+      <g fill="#1B1B21"><rect x="49" y="34" width="10" height="38" rx="5" opacity=".45"/><circle cx="54" cy="31" r="6.5"/><circle cx="54" cy="55" r="6.5"/><circle cx="54" cy="76" r="9"/></g>
+    </symbol>
+
+    <!-- B · Mark: the Mark button's ringed dot on primary, a rail stub above -->
+    <symbol id="B" viewBox="0 0 108 108">
+      <rect width="108" height="108" fill="#4355B9"/>
+      <rect x="49" y="22" width="10" height="34" rx="5" fill="url(#gB)"/>
+      <circle cx="54" cy="64" r="22" fill="#DEE0FF" opacity=".28"/>
+      <circle cx="54" cy="64" r="14" fill="#DEE0FF"/>
+      <linearGradient id="gB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BAC3FF" stop-opacity="0"/><stop offset="1" stop-color="#BAC3FF"/></linearGradient>
+    </symbol>
+    <symbol id="B-mono" viewBox="0 0 108 108">
+      <rect width="108" height="108" fill="#E3E1E9"/>
+      <g fill="#1B1B21"><rect x="49" y="22" width="10" height="30" rx="5" opacity=".35"/><circle cx="54" cy="64" r="22" opacity=".25"/><circle cx="54" cy="64" r="14"/></g>
+    </symbol>
+
+    <!-- C · Blocks: rail + three tonal cards of different lengths, like the timeline at a glance -->
+    <symbol id="C" viewBox="0 0 108 108">
+      <rect width="108" height="108" fill="#FBF8FF"/>
+      <rect x="30" y="28" width="6" height="54" rx="3" fill="#1B1B21" opacity=".18"/>
+      <circle cx="33" cy="32" r="5" fill="#1B1B21"/><rect x="42" y="26" width="38" height="13" rx="6.5" fill="#D0E4FF"/>
+      <circle cx="33" cy="51" r="5" fill="#1B1B21"/><rect x="42" y="45" width="28" height="13" rx="6.5" fill="#FFDDB5"/>
+      <circle cx="33" cy="70" r="5" fill="#4355B9"/><rect x="42" y="64" width="34" height="13" rx="6.5" fill="none" stroke="#4355B9" stroke-width="2.2" stroke-dasharray="4 3"/>
+    </symbol>
+    <symbol id="C-mono" viewBox="0 0 108 108">
+      <rect width="108" height="108" fill="#E3E1E9"/>
+      <g fill="#1B1B21"><circle cx="33" cy="32" r="5"/><circle cx="33" cy="51" r="5"/><circle cx="33" cy="70" r="5"/>
+      <rect x="42" y="26" width="38" height="13" rx="6.5" opacity=".55"/><rect x="42" y="45" width="28" height="13" rx="6.5" opacity=".55"/></g>
+      <rect x="42" y="64" width="34" height="13" rx="6.5" fill="none" stroke="#1B1B21" stroke-width="2.2" stroke-dasharray="4 3"/>
+    </symbol>
+
+    <!-- D · Split: one point dividing a labeled block (above) from an unlabeled one (hatched, below) -->
+    <symbol id="D" viewBox="0 0 108 108">
+      <rect width="108" height="108" fill="#121318"/>
+      <rect x="47" y="20" width="14" height="32" rx="7" fill="#64B5F6"/>
+      <rect x="47" y="56" width="14" height="32" rx="7" fill="url(#hatchD)"/>
+      <rect x="47.75" y="56.75" width="12.5" height="30.5" rx="6.25" fill="none" stroke="#91909A" stroke-width="1.5"/>
+      <circle cx="54" cy="54" r="15" fill="#121318"/>
+      <circle cx="54" cy="54" r="11" fill="#BAC3FF"/>
+      <pattern id="hatchD" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="2" height="5" fill="#91909A"/></pattern>
+    </symbol>
+    <symbol id="D-mono" viewBox="0 0 108 108">
+      <rect width="108" height="108" fill="#E3E1E9"/>
+      <rect x="47" y="20" width="14" height="32" rx="7" fill="#1B1B21" opacity=".55"/>
+      <rect x="47.75" y="56.75" width="12.5" height="30.5" rx="6.25" fill="none" stroke="#1B1B21" stroke-width="1.5" stroke-dasharray="3 2.5"/>
+      <circle cx="54" cy="54" r="15" fill="#E3E1E9"/><circle cx="54" cy="54" r="11" fill="#1B1B21"/>
+    </symbol>
+
+    <!-- Mark alias (shared by every candidate): the ringed dot, filled primary container -->
+    <symbol id="M" viewBox="0 0 108 108">
+      <rect width="108" height="108" fill="#DEE0FF"/>
+      <circle cx="54" cy="54" r="22" fill="#00105C" opacity=".14"/>
+      <circle cx="54" cy="54" r="14" fill="#00105C"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="grid" id="grid"></div>
+
+<script>
+  const C = [
+    ["A", "A · Rail", "Three points on the rail with tag-tone segments; the last, live point is primary. Reads as the timeline itself, small enough to stay legible."],
+    ["B", "B · Mark", "The Mark button's ringed dot on solid primary, with the rail's gradient tip falling into it. Bold, one shape; strongest at watch size."],
+    ["C", "C · Blocks", "Rail plus three tonal cards, the last one dashed (unlabeled). Most literal; the details get small on a watch."],
+    ["D", "D · Split", "One point dividing a labeled block from an unlabeled (hatched) one — the product idea: mark now, label later. Dark, distinctive."],
+  ];
+  // Launchers show the central 72 of the 108 canvas.
+  const use = (id) => `<svg viewBox="18 18 72 72"><use href="#${id}" width="108" height="108"/></svg>`;
+  document.getElementById("grid").innerHTML = C.map(([id, name, text]) => `
+    <section class="c"><h2>${name}</h2><p>${text}</p>
+      <div class="row">
+        <div class="cell sq">${use(id)}Launcher</div>
+        <div class="cell ci">${use(id)}Circle mask</div>
+        <div class="cell mono">${use(id + "-mono")}Themed</div>
+        <div class="cell"><div class="watch">${use(id)}</div>Watch</div>
+      </div>
+      <div class="home"><div class="cell">${use(id)}Time Tracker</div><div class="cell">${use("M")}Mark</div></div>
+    </section>`).join("");
+</script>
+</body>
+</html>

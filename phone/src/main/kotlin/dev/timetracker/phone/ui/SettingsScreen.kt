@@ -5,22 +5,27 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -37,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -91,21 +95,32 @@ fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
         },
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
-                items(tags, key = { it.id }) { tag ->
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(12.dp).clip(CircleShape).background(Color(tag.color)))
-                        Text(tag.name, Modifier.weight(1f).padding(start = 12.dp))
-                        TextButton(onClick = { renaming = tag }) { Text(stringResource(R.string.rename)) }
-                        TextButton(onClick = { scope.launch { deleting = tag to vm.deleteCount(tag.id) } }) { Text(stringResource(R.string.delete)) }
-                    }
-                }
+        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp)) {
+            item { SectionLabel(stringResource(R.string.tags_label)) }
+            itemsIndexed(tags, key = { _, tag -> tag.id }) { i, tag ->
+                TagItem(
+                    tag,
+                    shape = groupShape(i, tags.size),
+                    onRename = { renaming = tag },
+                    onDelete = { scope.launch { deleting = tag to vm.deleteCount(tag.id) } },
+                )
             }
-            Button(
-                onClick = { picker.launch("time-tracker-${LocalDate.now(zone)}.csv") },
-                Modifier.fillMaxWidth().padding(16.dp),
-            ) { Text(stringResource(R.string.export_csv)) }
+            item {
+                SectionLabel(stringResource(R.string.section_data), Modifier.padding(top = 18.dp))
+                Button(
+                    onClick = { picker.launch("time-tracker-${LocalDate.now(zone)}.csv") },
+                    Modifier.fillMaxWidth().height(60.dp),
+                ) {
+                    Icon(Icons.Filled.KeyboardArrowDown, null)
+                    Text(stringResource(R.string.export_csv), Modifier.padding(start = 8.dp), style = MaterialTheme.typography.titleMedium)
+                }
+                Text(
+                    stringResource(R.string.export_help),
+                    Modifier.padding(start = 8.dp, top = 10.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 
@@ -121,6 +136,38 @@ fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
             },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text(stringResource(android.R.string.cancel)) } },
         )
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(text, modifier.padding(start = 8.dp, top = 6.dp, bottom = 10.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+}
+
+/** M3 grouped list: big outer corners on the first and last item, small ones on the seams between. */
+private fun groupShape(index: Int, count: Int): RoundedCornerShape {
+    val top = if (index == 0) 24.dp else 6.dp
+    val bottom = if (index == count - 1) 24.dp else 6.dp
+    return RoundedCornerShape(top, top, bottom, bottom)
+}
+
+@Composable
+private fun TagItem(tag: Tag, shape: RoundedCornerShape, onRename: () -> Unit, onDelete: () -> Unit) {
+    val scheme = MaterialTheme.colorScheme
+    val tones = tagTones(tag.color)
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = 3.dp).height(58.dp).clip(shape).background(scheme.surfaceContainer)
+            .padding(start = 12.dp, end = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(36.dp).clip(CircleShape).background(tones.container), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(14.dp).clip(CircleShape).background(tones.rail))
+        }
+        Text(tag.name, Modifier.weight(1f).padding(start = 12.dp), style = MaterialTheme.typography.titleMedium)
+        TextButton(onClick = onRename) { Text(stringResource(R.string.rename)) }
+        TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = scheme.error)) {
+            Text(stringResource(R.string.delete))
+        }
     }
 }
 

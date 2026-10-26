@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI Candidates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f4f4f2; --fg: #141414; --muted: #666; --card: #fff; --line: #ddd; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #111; --fg: #eee; --muted: #999; --card: #1b1b1b; --line: #333; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 Inter, system-ui, sans-serif; }
+  header { padding: 40px 32px 8px; max-width: 1400px; margin: auto; }
+  h1 { font-size: 36px; font-weight: 800; margin: 0 0 6px; letter-spacing: -0.02em; }
+  header p { color: var(--muted); margin: 0; max-width: 70ch; }
+  nav { display: flex; gap: 8px; flex-wrap: wrap; padding: 16px 32px; max-width: 1400px; margin: auto; position: sticky; top: 0; background: var(--bg); z-index: 2; border-bottom: 1px solid var(--line); }
+  nav a { color: var(--fg); text-decoration: none; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; font-weight: 600; font-size: 14px; }
+  nav a:hover { background: var(--card); }
+  main { max-width: 1400px; margin: auto; padding: 24px 32px 64px; display: grid; gap: 40px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; scroll-margin-top: 72px; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 18px 22px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .head h2 { margin: 0; font-size: 22px; }
+  .head span { color: var(--muted); }
+  .head a { font-weight: 600; color: var(--fg); }
+  iframe { width: 100%; height: 900px; border: 0; display: block; background: #fff; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Time Tracker — five UI candidates</h1>
+  <p>Same features, same screens, same sample day. Each candidate shows Timeline (light + dark), Label sheet, Settings, the phone capture overlay and the watch. Open any one full-screen to inspect it.</p>
+</header>
+<nav>
+  <a href="#a">A · Ledger</a><a href="#b">B · Rail</a><a href="#c">C · Terminal</a><a href="#d">D · Calm</a><a href="#e">E · Swiss</a>
+</nav>
+<main>
+  <section id="a"><div class="head"><h2>A · Ledger</h2><span>Editorial paper notebook, serif numerals, ink colors</span><a href="a-ledger.html">Open full ↗</a></div><iframe src="a-ledger.html" loading="lazy" title="A Ledger"></iframe></section>
+  <section id="b"><div class="head"><h2>B · Rail</h2><span>Material 3 Expressive, duration-proportional rail</span><a href="b-rail.html">Open full ↗</a></div><iframe src="b-rail.html" loading="lazy" title="B Rail"></iframe></section>
+  <section id="c"><div class="head"><h2>C · Terminal</h2><span>OLED black, monospace instrument log, one amber accent</span><a href="c-terminal.html">Open full ↗</a></div><iframe src="c-terminal.html" loading="lazy" title="C Terminal"></iframe></section>
+  <section id="d"><div class="head"><h2>D · Calm</h2><span>Soft One UI cards, pastel tints, shutter-style Mark</span><a href="d-calm.html">Open full ↗</a></div><iframe src="d-calm.html" loading="lazy" title="D Calm"></iframe></section>
+  <section id="e"><div class="head"><h2>E · Swiss</h2><span>Railway-timetable grid, huge type, one signal red</span><a href="e-swiss.html">Open full ↗</a></div><iframe src="e-swiss.html" loading="lazy" title="E Swiss"></iframe></section>
+</main>
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C · Terminal — Time Tracker redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ---------- tokens (8px baseline) ---------- */
+:root{
+  --s1:8px; --s2:16px; --s3:24px; --s4:32px;
+  --acc:#FFB000;          /* signal amber: live + Mark only */
+  --red:#FF6B6B;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+.scr{ /* dark = OLED default */
+  --bg:#000; --ink:#EDEDED; --dim:#8A8A8A; --line:#262626; --dots:#3A3A3A;
+  --key:#0E0E0E; --key-edge:#2E2E2E; --acc-ink:#FFB000; --glow:0 0 12px rgba(255,176,0,.35);
+  --swatch-edge:transparent;
+}
+.scr.light{ /* "paper terminal" */
+  --bg:#F2EFE6; --ink:#141414; --dim:#5E5A52; --line:#D6D0C2; --dots:#B9B2A2;
+  --key:#FBF9F3; --key-edge:#C9C2B2; --acc-ink:#7A4D00; --glow:none;
+  --swatch-edge:rgba(0,0,0,.28);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0A0A0A;color:#D6D6D6;font-family:var(--mono);font-variant-numeric:tabular-nums;
+  padding:48px 40px 96px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.cap{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8A8A8A}
+
+/* ---------- title block ---------- */
+.intro{display:grid;grid-template-columns:minmax(320px,1fr) minmax(320px,1fr);gap:48px;max-width:1240px;margin-bottom:64px;
+  border-top:1px solid #262626;padding-top:24px}
+.intro h1{font-size:40px;font-weight:800;letter-spacing:-.01em;color:#EDEDED;line-height:1.1}
+.intro h1 span{color:var(--acc)}
+.intro .lede{margin-top:16px;font-size:14px;color:#BDBDBD;max-width:560px}
+.intro ul{list-style:none;margin-top:24px;font-size:13px;color:#BDBDBD}
+.intro li{padding:8px 0;border-top:1px solid #1C1C1C}
+.intro li::before{content:"▸ ";color:var(--acc)}
+.sw{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 24px}
+.sw div{width:96px;font-size:10px;color:#8A8A8A;letter-spacing:.06em}
+.sw div i{display:block;height:40px;border:1px solid #2A2A2A;margin-bottom:4px}
+.sw.tags div{width:64px}.sw.tags div i{height:16px}
+.spec{border:1px solid #262626;padding:16px;background:#000}
+.spec .big{font-size:56px;font-weight:300;color:var(--acc);text-shadow:0 0 18px rgba(255,176,0,.35);line-height:1}
+.spec .line{margin-top:16px;font-size:15px;color:#EDEDED;white-space:pre}
+.spec .line b{display:inline-block;width:6px;height:14px;background:#F06292;vertical-align:-1px;margin-right:6px}
+.spec .meta{margin-top:16px;display:flex;gap:24px}
+
+/* ---------- frames ---------- */
+.row-frames{display:flex;flex-wrap:wrap;gap:48px 40px;align-items:flex-start}
+.frame{width:360px}
+.frame>.cap{margin-bottom:12px;display:flex;justify-content:space-between}
+.frame>.cap b{color:#EDEDED;font-weight:500}
+.notes{margin-top:16px;font-size:11px;color:#9A9A9A;line-height:1.6;border-top:1px solid #1E1E1E;padding-top:12px}
+.notes p{padding-left:16px;text-indent:-16px;margin-bottom:6px}
+.notes p::before{content:"▸ ";color:var(--acc)}
+
+.phone{position:relative;width:360px;height:780px;border-radius:36px;overflow:hidden;
+  border:1px solid #2A2A2A;box-shadow:0 0 0 6px #050505,0 0 0 7px #1A1A1A,0 24px 60px rgba(0,0,0,.6)}
+.scr{position:absolute;inset:0;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+
+.status{height:32px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 24px;font-size:12px;font-weight:500}
+.batt{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--dim)}
+.batt i{width:22px;height:11px;border:1px solid var(--ink);border-radius:2px;position:relative;padding:1px}
+.batt i::before{content:"";display:block;height:100%;width:72%;background:var(--ink)}
+.batt i::after{content:"";position:absolute;right:-3px;top:3px;width:2px;height:4px;background:var(--ink)}
+.gest{position:absolute;bottom:8px;left:50%;width:108px;height:4px;margin-left:-54px;border-radius:2px;background:var(--ink);opacity:.5;z-index:9}
+
+/* header */
+.hdr{height:56px;flex:none;display:flex;align-items:center;padding:0 8px;border-bottom:1px solid var(--line)}
+.ib{width:40px;height:40px;display:grid;place-items:center;font-size:20px;color:var(--ink);background:none;border:0;font-family:inherit}
+.day{flex:1;text-align:left;font-size:14px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:0 8px}
+.day small{display:block;font-size:10px;font-weight:400;color:var(--dim);letter-spacing:.16em}
+.colhead{height:32px;flex:none;display:flex;align-items:center;padding:0 16px;font-size:10px;letter-spacing:.18em;color:var(--dim);border-bottom:1px solid var(--line)}
+.colhead span:first-child{width:64px}.colhead span:last-child{margin-left:auto}
+
+/* log rows */
+.log{flex:1;overflow:hidden}
+.row{height:56px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--line)}
+.row .t{width:64px;flex:none;font-size:15px;font-weight:500}
+.tag{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.tag i{width:6px;height:16px;background:var(--c);box-shadow:0 0 0 1px var(--swatch-edge)}
+.tag b{font-weight:500;color:var(--dim);width:6px;margin-right:6px;letter-spacing:0}
+.un .tag{color:var(--dim);font-weight:500}
+.lead{flex:1;min-width:16px;height:6px;margin:0 10px;
+  background:radial-gradient(circle,var(--dots) 1px,transparent 1.3px) 0 50%/6px 6px repeat-x}
+.row .d{font-size:14px;font-weight:500;white-space:nowrap}
+.un .d{color:var(--dim)}
+.cur{display:inline-block;width:7px;height:14px;background:var(--dim);margin-left:2px;animation:blink 1.2s steps(1) infinite;opacity:.8}
+@keyframes blink{50%{opacity:0}}
+
+/* current block */
+.now{position:relative;border-bottom:1px solid var(--line);padding-bottom:16px}
+.now::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc);box-shadow:var(--glow)}
+.now .row{border:0;height:48px}
+.now .t,.now .d{color:var(--acc-ink)}
+.now .d{font-size:12px;letter-spacing:.06em;font-weight:700}
+.live{display:flex;align-items:center;padding-left:80px;height:40px}
+.big{font-size:36px;font-weight:300;letter-spacing:.02em;color:var(--acc-ink);text-shadow:var(--glow)}
+.blk{width:16px;height:32px;margin-left:6px;background:var(--acc);animation:blink 1s steps(1) infinite}
+
+/* Mark */
+.dock{flex:none;padding:16px 16px 32px;border-top:1px solid var(--line)}
+.mark{width:100%;height:64px;border-radius:8px;border:0;background:var(--acc);color:#000;font-family:inherit;
+  font-size:16px;font-weight:800;letter-spacing:.24em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),inset 0 -4px 0 rgba(0,0,0,.28),0 0 0 1px #000,0 0 0 2px #3A2A00,0 0 28px rgba(255,176,0,.22)}
+.light .mark{box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -4px 0 rgba(0,0,0,.25),0 0 0 1px #5C3A00,0 2px 0 #C9C2B2}
+
+/* snackbar */
+.snack{position:absolute;left:16px;right:16px;bottom:128px;height:48px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 8px 0 16px;background:#141414;color:#F2EFE6;font-size:12px;letter-spacing:.1em;border-radius:4px;z-index:5;
+  box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.snack button{height:32px;padding:0 12px;background:none;border:1px solid #5A5A5A;border-radius:4px;color:#fff;font:700 12px var(--mono);letter-spacing:.14em}
+
+/* dim overlay base */
+.dim{position:absolute;inset:0;z-index:4}
+
+/* label sheet */
+.sheetbg [data-sel]{background:rgba(255,255,255,.08);box-shadow:inset 3px 0 0 #EDEDED}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:6;background:#0B0B0B;border-top:1px solid #3A3A3A;border-radius:16px 16px 0 0;
+  padding:8px 16px 40px;box-shadow:0 -24px 64px rgba(0,0,0,.9);animation:rise .6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{transform:translateY(40px);opacity:0}}
+.handle{width:40px;height:4px;border-radius:2px;background:#3A3A3A;margin:0 auto 16px}
+.prompt{font-size:11px;letter-spacing:.16em;color:var(--dim);display:flex;justify-content:space-between}
+.prompt b{color:var(--ink);font-weight:500}
+.times{display:flex;align-items:center;gap:8px;margin-top:8px}
+.tbtn{font:300 32px var(--mono);color:var(--ink);background:none;border:0;border-bottom:1px dashed #5A5A5A;padding:0 2px;line-height:40px}
+.arrow{color:var(--dim);font-size:20px}
+.sub{font-size:12px;color:var(--dim);margin-top:8px}
+.sub b{color:var(--ink);font-weight:500}
+.sect{font-size:10px;letter-spacing:.18em;color:var(--dim);margin:24px 0 8px;display:flex;justify-content:space-between}
+.keys{display:flex;flex-wrap:wrap;gap:8px}
+.key{height:40px;display:inline-flex;align-items:center;gap:8px;padding:0 12px;background:var(--key);color:var(--ink);
+  border:1px solid var(--key-edge);border-bottom-width:3px;border-radius:6px;font:700 12px var(--mono);letter-spacing:.1em}
+.key i{width:8px;height:8px;background:var(--c);box-shadow:0 0 0 1px var(--swatch-edge)}
+.key.new{border-style:dashed;border-bottom-width:1px;color:var(--dim);font-weight:500;background:none}
+.field{margin-top:16px;height:48px;border:1px solid #2E2E2E;border-radius:4px;display:flex;align-items:center;padding:0 12px;font-size:13px;color:var(--dim)}
+.field::before{content:">";color:var(--ink);margin-right:10px}
+.field .cur{margin:0 8px 0 0;background:var(--ink)}
+.act{margin-top:8px;width:100%;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;
+  background:none;border:1px solid #2E2E2E;border-radius:4px;color:var(--ink);font:500 12px var(--mono);letter-spacing:.1em}
+.act span{color:var(--dim)}
+.act.del{color:var(--red);border-color:#4A1F1F}
+.variant{margin-top:16px;background:#000;border:1px solid #262626;border-radius:8px;padding:16px}
+.variant .tbtn.err{border-bottom:1px solid var(--red);color:var(--red)}
+.errline{margin-top:8px;font-size:12px;color:var(--red);letter-spacing:.04em}
+
+/* settings */
+.top{height:56px;flex:none;display:flex;align-items:center;padding:0 8px;border-bottom:1px solid var(--line)}
+.top h2{font-size:14px;letter-spacing:.14em;font-weight:700}
+.trow{height:56px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--line);font-size:13px;font-weight:700;letter-spacing:.1em}
+.trow i{width:12px;height:12px;background:var(--c);margin-right:16px}
+.trow .sp{flex:1}
+.tb{height:32px;padding:0 8px;background:none;border:0;font:500 11px var(--mono);letter-spacing:.12em;color:var(--ink)}
+.tb::before{content:"[ ";color:var(--dim)}.tb::after{content:" ]";color:var(--dim)}
+.tb.del{color:var(--red)}
+.hint{padding:12px 16px;font-size:11px;color:var(--dim)}
+.export{width:100%;height:64px;border-radius:8px;border:0;background:#EDEDED;color:#000;font:800 15px var(--mono);letter-spacing:.2em;
+  box-shadow:inset 0 1px 0 #fff,inset 0 -4px 0 rgba(0,0,0,.2),0 0 0 1px #000,0 0 0 2px #333}
+
+/* capture overlay */
+.cap-ov{background:rgba(0,0,0,.9);backdrop-filter:blur(3px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.cap-ov .lbl{font-size:11px;letter-spacing:.24em;color:var(--dim)}
+.cap-ov .huge{font-size:104px;font-weight:300;line-height:1;margin:16px 0 24px;color:#EDEDED;letter-spacing:-.02em}
+.rec{font-size:14px;font-weight:800;letter-spacing:.24em;color:var(--acc);text-shadow:var(--glow)}
+.rec::first-letter{animation:blink 1s steps(1) infinite}
+.prev{margin-top:24px;font-size:12px;letter-spacing:.14em;color:var(--dim)}
+.prev b{color:#EDEDED;font-weight:500;letter-spacing:.04em;margin-left:8px}
+.drain{position:absolute;left:48px;right:48px;bottom:96px;height:2px;background:#262626}
+.drain::after{content:"";position:absolute;inset:0;background:var(--acc);transform-origin:left;animation:drain 2s linear infinite}
+@keyframes drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
+/* empty */
+.empty{flex:1;padding:32px 24px;display:flex;flex-direction:column;justify-content:center}
+.empty .k{font-size:11px;letter-spacing:.2em;color:var(--dim)}
+.empty p{margin-top:16px;font-size:15px;line-height:1.6;color:var(--ink)}
+.empty p b{color:var(--acc-ink);font-weight:700}
+
+/* watch */
+.watches{display:flex;gap:32px;flex-wrap:wrap}
+.watch{width:200px;height:200px;border-radius:50%;background:#000;position:relative;overflow:hidden;color:#EDEDED;
+  box-shadow:0 0 0 8px #141414,0 0 0 9px #2A2A2A,0 0 0 14px #0A0A0A,0 16px 40px rgba(0,0,0,.7);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.watch .rec{font-size:11px}
+.watch .wt{font-size:52px;font-weight:300;line-height:1;margin:10px 0 12px}
+.watch .pv{font-size:9px;letter-spacing:.16em;color:var(--dim)}
+.watch .pv b{display:block;font-size:14px;color:#EDEDED;letter-spacing:.02em;font-weight:500;margin-top:2px}
+.face .ft{font-size:56px;font-weight:300;line-height:1;color:#BDBDBD}
+.face .fd{font-size:10px;letter-spacing:.2em;color:var(--dim);margin-bottom:6px}
+.comp{margin-top:12px;width:48px;height:48px;border-radius:50%;border:1.5px solid var(--acc);display:grid;place-items:center;
+  font-size:14px;font-weight:700;color:var(--acc);box-shadow:var(--glow);position:relative}
+.comp::before{content:"";position:absolute;top:-4px;left:50%;width:6px;height:6px;margin-left:-3px;background:var(--acc);border-radius:50%}
+</style>
+</head>
+<body>
+
+<!-- ======================= TITLE BLOCK ======================= -->
+<section class="intro">
+  <div>
+    <div class="cap">Candidate C · Time Tracker redesign</div>
+    <h1>C · Terminal<span>_</span></h1>
+    <p class="lede">An OLED instrument panel that reads like a log file. Every block is one line of output; the only light on the panel is the amber signal for <em>now</em> and the <em>Mark</em> key.</p>
+    <ul>
+      <li>One signal color. Amber means “live” or “press here”, and nothing else.</li>
+      <li>Rows are log lines. Time, tag and duration line up in mono columns with leader dots between them.</li>
+      <li>Unlabeled is shown as missing data: dim <code>?? UNLABELED</code> with a blinking cursor waiting for input.</li>
+      <li>Hardware keys, not buttons: Mark and the tags are keycaps with a 3px bottom bevel.</li>
+      <li>Pure #000 and 1px hairlines on an 8px baseline. Lit pixels stay few, which saves power on OLED and suits always-on.</li>
+    </ul>
+  </div>
+  <div>
+    <div class="cap">Palette</div>
+    <div class="sw">
+      <div><i style="background:#000"></i>BG #000000</div>
+      <div><i style="background:#EDEDED"></i>INK #EDEDED</div>
+      <div><i style="background:#8A8A8A"></i>DIM #8A8A8A</div>
+      <div><i style="background:#262626"></i>HAIRLINE #262626</div>
+      <div><i style="background:#FFB000"></i>SIGNAL #FFB000</div>
+      <div><i style="background:#FF6B6B"></i>DESTRUCT #FF6B6B</div>
+      <div><i style="background:#F2EFE6"></i>PAPER #F2EFE6</div>
+      <div><i style="background:#7A4D00"></i>SIGNAL/PAPER #7A4D00</div>
+    </div>
+    <div class="cap">Tag swatches (stored palette, unchanged)</div>
+    <div class="sw tags">
+      <div><i style="background:#64B5F6"></i>WORK</div>
+      <div><i style="background:#9575CD"></i>COMMUTE</div>
+      <div><i style="background:#F06292"></i>BREAKFAST</div>
+      <div><i style="background:#81C784"></i>LUNCH</div>
+      <div><i style="background:#4DB6AC"></i>SLEEP</div>
+      <div><i style="background:#FFF176"></i>READING</div>
+      <div><i style="background:#E57373"></i>EXERCISE</div>
+      <div><i style="background:#FFB74D"></i>SPARE</div>
+    </div>
+    <div class="cap">Type · JetBrains Mono</div>
+    <div class="spec">
+      <div class="big"><span class="tick">00:12:07</span></div>
+      <div class="line">07:10  <b></b>BREAKFAST ........ 35m</div>
+      <div class="meta cap"><span>300 numerals</span><span>700 caps +.1em</span><span>tabular figures</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- shared timeline body, stamped into each [data-tl] frame by the script below -->
+<template id="tl">
+  <div class="status"><span>14:44</span><span class="batt">82%<i></i></span></div>
+  <div class="hdr">
+    <button class="ib" aria-label="Previous day">‹</button>
+    <div class="day">Today · Oct 26<small>TAP → JUMP TO TODAY</small></div>
+    <button class="ib" aria-label="Next day">›</button>
+    <button class="ib" aria-label="Settings"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="6" stroke-width="1.5"/><circle cx="12" cy="12" r="2.2" stroke-width="1.5"/><path stroke-width="2.6" d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M18.7 5.3l-1.8 1.8M5.3 18.7l1.8-1.8M18.7 18.7l-1.8-1.8"/></svg></button>
+  </div>
+  <div class="colhead"><span>START</span><span>BLOCK</span><span>DUR</span></div>
+  <div class="log">
+    <div class="row"><span class="t">07:10</span><span class="tag"><i style="--c:#F06292"></i>Breakfast</span><span class="lead"></span><span class="d">35m</span></div>
+    <div class="row"><span class="t">07:45</span><span class="tag"><i style="--c:#9575CD"></i>Commute</span><span class="lead"></span><span class="d">50m</span></div>
+    <div class="row"><span class="t">08:35</span><span class="tag"><i style="--c:#64B5F6"></i>Work</span><span class="lead"></span><span class="d">3h 10m</span></div>
+    <div class="row un"><span class="t">11:45</span><span class="tag"><b>??</b>Unlabeled<span class="cur"></span></span><span class="lead"></span><span class="d">12s</span></div>
+    <div class="row"><span class="t">11:45</span><span class="tag"><i style="--c:#81C784"></i>Lunch</span><span class="lead"></span><span class="d">1h 0m</span></div>
+    <div class="row un" data-sel><span class="t">12:45</span><span class="tag"><b>??</b>Unlabeled<span class="cur"></span></span><span class="lead"></span><span class="d">1h 47m</span></div>
+    <div class="now un">
+      <div class="row"><span class="t">14:32</span><span class="tag"><b>??</b>Unlabeled</span><span class="lead"></span><span class="d">IN PROGRESS · <span class="tick-m">12m</span></span></div>
+      <div class="live"><span class="big tick">00:12:07</span><span class="blk"></span></div>
+    </div>
+  </div>
+  <div class="dock"><button class="mark">● MARK</button></div>
+  <div class="gest"></div>
+</template>
+
+<!-- ======================= FRAMES ======================= -->
+<section class="row-frames">
+
+  <!-- 1 timeline dark -->
+  <div class="frame">
+    <div class="cap"><b>01 · Timeline</b><span>dark · primary</span></div>
+    <div class="phone"><div class="scr" data-tl></div></div>
+    <div class="notes">
+      <p>Every row is a log line: <code>HH:mm ▍TAG …… dur</code>. Mono columns line the times up exactly, so you can scan the list fast.</p>
+      <p>The current block is the only lit row. An amber rail, the seconds counting live, and a block cursor show that the log is still being written.</p>
+    </div>
+  </div>
+
+  <!-- 2 timeline light + undo -->
+  <div class="frame">
+    <div class="cap"><b>02 · Timeline</b><span>light “paper terminal” + undo</span></div>
+    <div class="phone"><div class="scr light" data-tl>
+      <div class="snack"><span>POINT DELETED  ·</span><button>UNDO</button></div>
+    </div></div>
+    <div class="notes">
+      <p>The light mode looks like printer paper. Amber text darkens to #7A4D00 to pass AA contrast. The Mark key stays full amber because it is a surface, not text.</p>
+      <p>The undo snackbar is an inverted ink bar above the Mark key, so you can still reach the thumb target behind it.</p>
+    </div>
+  </div>
+
+  <!-- 3 label sheet -->
+  <div class="frame">
+    <div class="cap"><b>03 · Label sheet</b><span>block 12:45 → 14:32</span></div>
+    <div class="phone"><div class="scr sheetbg" data-tl>
+      <div class="dim" style="background:rgba(0,0,0,.72)"></div>
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="prompt"><span>&gt; LABEL BLOCK</span><b>SWIPE ↓</b></div>
+        <div class="times"><button class="tbtn">12:45</button><span class="arrow">→</span><button class="tbtn">14:32</button></div>
+        <div class="sub"><b>1h 47m</b> · tap a time to change it</div>
+        <div class="sect"><span>TAG · LAST USED</span><span>TAP = APPLY + CLOSE</span></div>
+        <div class="keys">
+          <button class="key"><i style="--c:#64B5F6"></i>WORK</button>
+          <button class="key"><i style="--c:#9575CD"></i>COMMUTE</button>
+          <button class="key"><i style="--c:#F06292"></i>BREAKFAST</button>
+          <button class="key"><i style="--c:#81C784"></i>LUNCH</button>
+          <button class="key"><i style="--c:#4DB6AC"></i>SLEEP</button>
+          <button class="key"><i style="--c:#FFF176"></i>READING</button>
+          <button class="key"><i style="--c:#E57373"></i>EXERCISE</button>
+          <button class="key new">+ New tag</button>
+        </div>
+        <div class="field"><span class="cur"></span>Note (optional)</div>
+        <button class="act">Insert a point in the middle<span>⇥</span></button>
+        <button class="act del">Delete start point<span style="color:inherit">⌫</span></button>
+      </div>
+    </div></div>
+    <div class="variant">
+      <div class="cap" style="margin-bottom:8px">Variant · error state</div>
+      <div class="times" style="margin:0"><button class="tbtn">12:45</button><span class="arrow">→</span><button class="tbtn err">15:10</button></div>
+      <div class="errline">! Outside the neighbouring points</div>
+    </div>
+    <div class="notes">
+      <p>A command palette that rises from the bottom. Tags are keycaps in last-used order, so the likely answer sits under the thumb.</p>
+      <p>Dashed underlines mark the times as editable. On the current block the end time reads <code>now</code>. Delete is the only red key, set off by itself at the bottom.</p>
+    </div>
+  </div>
+
+  <!-- 4 settings -->
+  <div class="frame">
+    <div class="cap"><b>04 · Settings</b><span>tags + export</span></div>
+    <div class="phone"><div class="scr">
+      <div class="status"><span>14:44</span><span class="batt">82%<i></i></span></div>
+      <div class="top"><button class="ib" aria-label="Back">←</button><h2>SETTINGS</h2></div>
+      <div class="colhead"><span>TAGS</span><span></span><span>07</span></div>
+      <div class="trow"><i style="--c:#64B5F6"></i>WORK<span class="sp"></span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+      <div class="trow"><i style="--c:#9575CD"></i>COMMUTE<span class="sp"></span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+      <div class="trow"><i style="--c:#F06292"></i>BREAKFAST<span class="sp"></span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+      <div class="trow"><i style="--c:#81C784"></i>LUNCH<span class="sp"></span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+      <div class="trow"><i style="--c:#4DB6AC"></i>SLEEP<span class="sp"></span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+      <div class="trow"><i style="--c:#FFF176"></i>READING<span class="sp"></span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+      <div class="trow"><i style="--c:#E57373"></i>EXERCISE<span class="sp"></span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+      <div style="flex:1"></div>
+      <div class="dock"><button class="export">↓ EXPORT CSV</button></div>
+      <div class="gest"></div>
+    </div></div>
+    <div class="notes">
+      <p>Export is the primary key, but it is white, not amber. Amber is kept for Mark, so the two can never be confused.</p>
+      <p>Actions are bracketed text keys, <code>[ RENAME ]</code> and <code>[ DELETE ]</code>, so a long tag list stays quiet and easy to scan.</p>
+    </div>
+  </div>
+
+  <!-- 5 capture overlay -->
+  <div class="frame">
+    <div class="cap"><b>05 · Capture confirm</b><span>side-key mark · 2 s</span></div>
+    <div class="phone"><div class="scr" data-tl>
+      <div class="dim cap-ov">
+        <div class="lbl">MARK · SIDE KEY</div>
+        <div class="huge">14:32</div>
+        <div class="rec">● RECORDED</div>
+        <div class="prev">PREVIOUS BLOCK<b>1h 47m</b></div>
+        <div class="drain"></div>
+      </div>
+    </div></div>
+    <div class="notes">
+      <p>A huge thin timestamp is the only thing to read. A 2px amber bar drains over the 2 s auto-dismiss, so it is obvious the overlay closes itself.</p>
+    </div>
+  </div>
+
+  <!-- 6 empty state -->
+  <div class="frame">
+    <div class="cap"><b>06 · Empty state</b><span>optional</span></div>
+    <div class="phone"><div class="scr">
+      <div class="status"><span>14:44</span><span class="batt">82%<i></i></span></div>
+      <div class="hdr">
+        <button class="ib">‹</button><div class="day">Today · Oct 26<small>TAP → JUMP TO TODAY</small></div><button class="ib">›</button>
+        <button class="ib" aria-label="Settings"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="6" stroke-width="1.5"/><circle cx="12" cy="12" r="2.2" stroke-width="1.5"/><path stroke-width="2.6" d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M18.7 5.3l-1.8 1.8M5.3 18.7l1.8-1.8M18.7 18.7l-1.8-1.8"/></svg></button>
+      </div>
+      <div class="empty">
+        <div class="k">$ LOG — 0 POINTS<span class="cur" style="vertical-align:-2px;margin-left:6px"></span></div>
+        <p>Press <b>Mark</b>, or bind the side button's double press to “Mark”.</p>
+      </div>
+      <div class="dock"><button class="mark">● MARK</button></div>
+      <div class="gest"></div>
+    </div></div>
+    <div class="notes">
+      <p>The empty log is a shell prompt waiting for its first line. The only amber word, Mark, points at the only amber key.</p>
+    </div>
+  </div>
+
+  <!-- 7 watch -->
+  <div class="frame" style="width:464px">
+    <div class="cap"><b>07 · Galaxy Watch</b><span>confirm + complication</span></div>
+    <div class="watches" style="padding:16px">
+      <div class="watch">
+        <div class="rec">● RECORDED</div>
+        <div class="wt">14:32</div>
+        <div class="pv">PREVIOUS BLOCK<b>1h 47m</b></div>
+      </div>
+      <div class="watch face">
+        <div class="fd">SUN 26</div>
+        <div class="ft">15:19</div>
+        <div class="comp">47m</div>
+      </div>
+    </div>
+    <div class="notes" style="max-width:464px">
+      <p>The same mono type and amber accent, with almost every pixel off, which suits AOD. The confirm screen is three centered lines that read at a glance.</p>
+      <p>The complication is an amber ring showing <code>47m</code> since the last mark. Its dot sits at 12 o'clock like a timer start.</p>
+    </div>
+  </div>
+
+</section>
+
+<script>
+  // Stamp the shared timeline into each frame (before any overlay already inside it).
+  const tl = document.getElementById('tl').innerHTML;
+  document.querySelectorAll('[data-tl]').forEach(el => el.insertAdjacentHTML('afterbegin', tl));
+
+  // Live seconds for the current block (starts at 12m 07s).
+  let s = 12 * 60 + 7;
+  const pad = n => String(n).padStart(2, '0');
+  setInterval(() => {
+    s++;
+    const txt = pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60);
+    document.querySelectorAll('.tick').forEach(e => e.textContent = txt);
+    document.querySelectorAll('.tick-m').forEach(e => e.textContent = Math.floor(s / 60) + 'm');
+  }, 1000);
+</script>
+</body>
+</html>

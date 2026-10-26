@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A · Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..500&family=Inter:wght@400;500;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* ---------- Tokens ---------- */
+:root {
+  --serif: "Newsreader", Georgia, serif;
+  --sans: "Inter", system-ui, sans-serif;
+  --hand: "Caveat", "Bradley Hand", cursive;
+  /* spacing scale: 4 8 12 16 20 24 32 40 56 */
+  --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .2 0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.light {
+  --paper: #F6F1E7; --card: #FBF8F1; --ink: #1E2433; --ink-2: #585D6A; --ink-3: #A9A69C;
+  --rule: rgba(46, 74, 122, .13); --margin: #C8574B; --mark: #B03F33; --red-ink: #A3352B;
+  --seal: #22304F; --seal-text: #F6F1E7; --grain-o: .28;
+  --t-work: #A8432F; --t-commute: #9A5B12; --t-breakfast: #7A6710; --t-lunch: #3F6B3A;
+  --t-sleep: #1F6B66; --t-reading: #2F5D8C; --t-exercise: #5E4A8C; --t-rose: #9B3B62;
+}
+.dark {
+  --paper: #131B2C; --card: #1A2338; --ink: #ECE6D8; --ink-2: #A9AEBB; --ink-3: #4F586C;
+  --rule: rgba(170, 190, 230, .09); --margin: #9C4A44; --mark: #E58A7C; --red-ink: #E58A7C;
+  --seal: #E8DFC9; --seal-text: #131B2C; --grain-o: .10;
+  --t-work: #E08A74; --t-commute: #D9A55A; --t-breakfast: #CDB65A; --t-lunch: #8DB57F;
+  --t-sleep: #6FB3AA; --t-reading: #86AAD6; --t-exercise: #A795D4; --t-rose: #D98BA9;
+}
+.c-work { --c: var(--t-work); } .c-commute { --c: var(--t-commute); }
+.c-breakfast { --c: var(--t-breakfast); } .c-lunch { --c: var(--t-lunch); }
+.c-sleep { --c: var(--t-sleep); } .c-reading { --c: var(--t-reading); }
+.c-exercise { --c: var(--t-exercise); } .c-rose { --c: var(--t-rose); }
+
+/* ---------- Page ---------- */
+* { box-sizing: border-box; }
+body { margin: 0; background: #E6E0D3; color: #1E2433; font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1680px; margin: 0 auto; padding: 56px 40px 96px; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+
+.intro { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(320px, 1.1fr); gap: 56px; align-items: start; }
+@media (max-width: 900px) { .intro { grid-template-columns: 1fr; } .wrap { padding: 32px 16px 64px; } }
+.kicker { font: 600 11px var(--sans); letter-spacing: .16em; text-transform: uppercase; color: #8A3A2E; }
+.intro h1 { font: 500 64px/1 var(--serif); letter-spacing: -.02em; margin: 12px 0 16px; }
+.intro h1 em { font-weight: 400; color: #8A3A2E; }
+.concept { font: italic 400 21px/1.45 var(--serif); color: #3A3F4C; margin: 0 0 24px; max-width: 34em; }
+.principles { margin: 0; padding: 0; list-style: none; counter-reset: p; max-width: 36em; }
+.principles li { counter-increment: p; position: relative; padding: 10px 0 10px 40px; border-top: 1px solid rgba(46,74,122,.16); font-size: 14px; line-height: 1.5; color: #3A3F4C; }
+.principles li::before { content: counter(p, lower-roman) "."; position: absolute; left: 0; top: 9px; font: italic 500 16px var(--serif); color: #8A3A2E; }
+.principles b { color: #1E2433; font-weight: 600; }
+
+.spec h2 { font: 600 11px var(--sans); letter-spacing: .16em; text-transform: uppercase; color: #585D6A; margin: 0 0 12px; }
+.spec section + section { margin-top: 32px; }
+.base { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.sw { font-size: 11px; color: #4A4F5B; line-height: 1.35; }
+.sw i { display: block; height: 48px; border-radius: 6px; margin-bottom: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+.sw b { display: block; font-weight: 600; color: #1E2433; }
+.inks { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; }
+.ink i { display: block; height: 48px; border-radius: 6px; margin-bottom: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+  background: linear-gradient(135deg, var(--l) 0 50%, var(--d) 50% 100%); }
+.ink small { display: block; font-size: 10px; color: #6B6F7A; font-family: ui-monospace, Menlo, monospace; }
+@media (max-width: 640px) { .base { grid-template-columns: repeat(3, 1fr); } .inks { grid-template-columns: repeat(4, 1fr); } }
+
+.type { display: grid; gap: 4px; }
+.type div { display: flex; align-items: baseline; gap: 16px; padding: 10px 0; border-top: 1px solid rgba(46,74,122,.16); }
+.type span.lbl { width: 110px; flex: none; font-size: 11px; color: #585D6A; }
+.type .s1 { font: 500 34px/1 var(--serif); font-feature-settings: "lnum", "tnum"; }
+.type .s2 { font: 500 20px/1 var(--serif); font-feature-settings: "onum", "tnum"; }
+.type .s3 { font: 600 12px var(--sans); letter-spacing: .1em; text-transform: uppercase; }
+.type .s4 { font: 600 26px/1 var(--hand); color: #B03F33; }
+
+.frames { display: flex; flex-wrap: wrap; gap: 56px 40px; margin-top: 72px; align-items: flex-start; }
+figure.frame { margin: 0; width: 360px; }
+figcaption { margin-top: 20px; }
+figcaption h3 { margin: 0 0 8px; font: 600 11px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: #1E2433; }
+figcaption h3 span { color: #8A3A2E; margin-right: 6px; }
+.notes { list-style: none; margin: 0; padding: 0; }
+.notes li { font-size: 12.5px; line-height: 1.5; color: #4A4F5B; padding: 6px 0 6px 18px; position: relative; border-top: 1px dotted rgba(46,74,122,.25); }
+.notes li::before { content: ""; position: absolute; left: 2px; top: 13px; width: 6px; height: 6px; border-radius: 50%; background: #B03F33; }
+.err-spec { display: inline-block; margin-top: 2px; font: italic 500 14px var(--serif); color: #A3352B; }
+.err-spec::before { content: "⚠︎ "; font-style: normal; }
+
+/* ---------- Phone ---------- */
+.phone { position: relative; width: 360px; height: 780px; border-radius: 36px; overflow: hidden; background: var(--paper); color: var(--ink);
+  box-shadow: 0 0 0 7px #1B1C20, 0 0 0 8px #3A3B40, 0 40px 70px -30px rgba(30, 28, 40, .55); }
+.phone::after { content: ""; position: absolute; inset: 0; background: var(--grain); opacity: var(--grain-o); mix-blend-mode: multiply; pointer-events: none; z-index: 60; }
+.dark.phone::after { mix-blend-mode: screen; }
+.status { position: absolute; top: 0; left: 0; right: 0; height: 32px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; font: 600 13px var(--sans); z-index: 5; color: var(--ink); }
+.status .r { display: flex; align-items: center; gap: 6px; }
+.sig { width: 15px; height: 11px; background: linear-gradient(to top right, currentColor 50%, transparent 50%); opacity: .9; }
+.batt { width: 23px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; padding: 1px; }
+.batt::before { content: ""; display: block; height: 100%; width: 72%; background: currentColor; border-radius: 1px; }
+.batt::after { content: ""; position: absolute; right: -4px; top: 2.5px; width: 2px; height: 4px; background: currentColor; border-radius: 0 1px 1px 0; }
+.gesture { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 108px; height: 4px; border-radius: 2px; background: var(--ink); opacity: .35; z-index: 55; }
+
+.app { position: absolute; inset: 0; padding-top: 32px; display: flex; flex-direction: column; }
+
+/* Header: day title + nav + double rule (account-book style) */
+.hd { display: flex; align-items: center; height: 64px; padding: 0 8px 0 20px; }
+.day { flex: 1; text-align: left; font: 500 29px/1 var(--serif); letter-spacing: -.015em; font-feature-settings: "lnum"; }
+.day em { font-weight: 400; color: var(--ink-2); }
+.icon-btn { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: var(--ink); }
+.icon-btn.chev { font: 400 28px/1 var(--serif); padding-bottom: 4px; }
+.icon-btn.dim { color: var(--ink-3); }
+.icon-btn svg { width: 20px; height: 20px; }
+.dbl { height: 5px; border-top: 1.5px solid var(--ink); border-bottom: .75px solid var(--ink); opacity: .8; }
+
+/* Ledger body: ruled lines + double red margin */
+.ledger { position: relative; flex: 1; background: repeating-linear-gradient(to bottom, transparent 0 55px, var(--rule) 55px 56px); }
+.ledger::before { content: ""; position: absolute; top: 0; bottom: 0; left: 64px; width: 4px; border-left: 1px solid var(--margin); border-right: 1px solid var(--margin); opacity: .55; }
+.ledger::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 190px; background: linear-gradient(to bottom, transparent, var(--paper) 62%); pointer-events: none; }
+.row { position: relative; display: grid; grid-template-columns: 66px 1fr auto; align-items: center; height: 56px; }
+.t { text-align: right; padding-right: 12px; font: 500 17px var(--serif); font-feature-settings: "onum", "tnum"; letter-spacing: .01em; }
+.entry { display: flex; align-items: center; min-width: 0; padding-left: 14px; }
+.dur { padding-right: 20px; font: 400 17px var(--serif); font-feature-settings: "onum", "tnum"; text-align: right; }
+.tag { font: 600 11.5px/1 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--c); padding-bottom: 5px;
+  background: linear-gradient(var(--c), var(--c)) left bottom / 100% 1.5px no-repeat; }
+.blank { flex: 1; display: flex; align-items: baseline; gap: 8px; margin-right: 14px; min-width: 0; }
+.blank i { font: italic 400 15.5px var(--serif); color: var(--ink-2); }
+.blank::after { content: ""; flex: 1; border-bottom: 1.5px dotted var(--ink-3); transform: translateY(-2px); }
+.row.slip .t, .row.slip .dur { color: var(--ink-2); }
+.row.slip .dur { font-style: italic; }
+.row.current .dur { display: flex; align-items: baseline; gap: 5px; }
+.ip { font: 600 10px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--mark); }
+.pulse { position: absolute; left: 61px; top: 23px; width: 10px; height: 10px; border-radius: 50%; background: var(--mark); z-index: 2; box-shadow: 0 0 0 3px var(--paper); }
+.pulse::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 1.5px solid var(--mark); animation: ink 1.8s ease-out infinite; }
+@keyframes ink { from { transform: scale(.6); opacity: .9; } to { transform: scale(2.4); opacity: 0; } }
+.now { position: absolute; left: 10px; top: 52px; font: 600 23px/1 var(--hand); color: var(--mark); transform: rotate(-7deg); display: flex; align-items: flex-start; gap: 0; z-index: 2; }
+.now svg { width: 22px; height: 20px; margin-top: -10px; }
+
+/* Mark seal */
+.seal { position: absolute; left: 50%; bottom: 42px; width: 92px; height: 92px; margin-left: -46px; border-radius: 50%; z-index: 20;
+  background: var(--seal); color: var(--seal-text); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  transform: rotate(-3deg);
+  box-shadow: 0 0 0 5px var(--paper), 0 0 0 6px color-mix(in srgb, var(--seal) 30%, transparent), 0 14px 26px -10px rgba(10, 14, 30, .6); }
+.seal::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; border: 1px dashed color-mix(in srgb, var(--seal-text) 50%, transparent); }
+.seal .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mark); box-shadow: 0 0 0 2px color-mix(in srgb, var(--seal-text) 25%, transparent); }
+.dark .seal .dot { background: #B03F33; }
+.seal .lbl { font: italic 500 21px/1 var(--serif); letter-spacing: .01em; }
+
+/* Undo snackbar: a paper slip */
+.snack { position: absolute; left: 16px; right: 16px; bottom: 156px; height: 48px; z-index: 25; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 18px;
+  background: #ECE6D8; color: #1E2433; border-radius: 6px; box-shadow: 0 12px 24px -10px rgba(0,0,0,.6); transform: rotate(-.6deg); }
+.snack span { font: italic 400 16px var(--serif); }
+.snack button { font: 600 12px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: #A3352B; padding: 12px 12px; }
+
+/* ---------- Label sheet: torn index card ---------- */
+.ghost { position: absolute; inset: 0; }
+.scrim { position: absolute; inset: 0; background: rgba(22, 26, 40, .46); z-index: 10; }
+.sheet-wrap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; filter: drop-shadow(0 -10px 22px rgba(10, 14, 30, .35)); animation: slide .7s cubic-bezier(.2, .8, .2, 1) both .2s; }
+@keyframes slide { from { transform: translateY(100%); } to { transform: none; } }
+.card { background: var(--card); padding: 30px 22px 36px;
+  clip-path: polygon(0% 6px, 2.5% 3px, 4% 7px, 6.5% 2px, 9% 5px, 11% 1px, 13.5% 6px, 15% 3px, 18% 7px, 20% 2px, 22.5% 5px, 25% 1px, 27% 4px, 29.5% 7px, 32% 2px, 34% 5px, 36.5% 0px, 39% 4px, 41% 7px, 43.5% 3px, 46% 6px, 48% 1px, 50.5% 5px, 53% 2px, 55% 7px, 57.5% 3px, 60% 5px, 62% 0px, 64.5% 4px, 67% 7px, 69% 2px, 71.5% 6px, 74% 3px, 76% 1px, 78.5% 5px, 81% 7px, 83% 2px, 85.5% 6px, 88% 3px, 90% 7px, 92.5% 1px, 95% 5px, 97% 2px, 100% 6px, 100% 100%, 0% 100%); }
+.card-hd { padding-bottom: 14px; border-bottom: 1px solid var(--margin); }
+.times { display: flex; align-items: baseline; gap: 12px; }
+.time { font: 500 42px/1.1 var(--serif); font-feature-settings: "lnum", "tnum"; letter-spacing: -.01em; border-bottom: 1.5px dotted var(--ink-3); padding: 0 1px; }
+.arr { font: 300 28px var(--serif); color: var(--ink-2); }
+.sub { margin-top: 8px; font: 400 13px var(--sans); color: var(--ink-2); }
+.sub b { font: 500 15px var(--serif); color: var(--ink); font-feature-settings: "lnum"; }
+.card-bd { padding-top: 18px; background: repeating-linear-gradient(to bottom, transparent 0 27px, var(--rule) 27px 28px); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 12px; background: var(--card); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); border-radius: 4px;
+  font: 600 11.5px var(--sans); letter-spacing: .09em; text-transform: uppercase; color: var(--c); }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+.chip.new { --c: var(--ink-2); border-style: dashed; border-color: var(--ink-3); }
+.chip.new::before { display: none; }
+.note { display: block; width: 100%; margin: 22px 0 18px; padding: 8px 0; border: 0; border-bottom: 1px solid var(--ink-3); background: transparent; color: var(--ink); font: italic 400 16px var(--serif); outline: none; }
+.note::placeholder { color: var(--ink-2); }
+.btn-line { width: 100%; height: 48px; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--ink) 55%, transparent); background: var(--card); font: 500 14px var(--sans); color: var(--ink); display: flex; align-items: center; justify-content: center; gap: 10px; }
+.btn-line svg { width: 34px; height: 10px; }
+.btn-del { width: 100%; height: 44px; margin-top: 6px; font: 500 14px var(--sans); color: var(--red-ink); }
+
+/* ---------- Settings ---------- */
+.topbar { display: flex; align-items: center; gap: 4px; height: 64px; padding: 0 16px 0 8px; }
+.topbar h2 { margin: 0; font: 500 26px var(--serif); letter-spacing: -.01em; }
+.sect { padding: 22px 20px 10px; font: 600 11px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.tags { background: repeating-linear-gradient(to bottom, transparent 0 55px, var(--rule) 55px 56px); border-top: 1px solid var(--rule); }
+.trow { display: grid; grid-template-columns: 28px 1fr auto auto; align-items: center; gap: 0 4px; height: 56px; padding: 0 12px 0 20px; }
+.trow i { width: 11px; height: 11px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 18%, transparent); }
+.trow .nm { font: 400 18px var(--serif); }
+.trow button { font: 500 13px var(--sans); color: var(--ink-2); padding: 12px 8px; }
+.trow button.del { color: var(--red-ink); }
+.btn-primary { position: absolute; left: 20px; right: 20px; bottom: 40px; height: 54px; border-radius: 27px; background: var(--seal); color: var(--seal-text); font: 600 15px var(--sans); letter-spacing: .01em;
+  display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 12px 22px -12px rgba(10, 14, 30, .6); }
+.btn-primary svg { width: 18px; height: 18px; }
+
+/* ---------- Capture overlay ---------- */
+.capture { position: absolute; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(15, 21, 36, .88); backdrop-filter: blur(3px); color: #F3EEE3; }
+.stamp { position: relative; width: 264px; height: 264px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  border: 1.5px solid rgba(243, 238, 227, .38); box-shadow: inset 0 0 0 7px transparent, inset 0 0 0 8px rgba(243, 238, 227, .16);
+  animation: press .55s cubic-bezier(.3, 1.4, .5, 1) both .3s; }
+@keyframes press { from { transform: scale(1.18) rotate(-9deg); opacity: 0; } to { transform: scale(1) rotate(-2deg); opacity: 1; } }
+.big { font: 500 88px/1 var(--serif); font-feature-settings: "lnum", "tnum"; letter-spacing: -.02em; }
+.rec { display: flex; align-items: center; gap: 8px; font: 600 11.5px var(--sans); letter-spacing: .18em; text-transform: uppercase; }
+.rec::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #E58A7C; }
+.prev { font: italic 400 17px var(--serif); color: #C9CCD6; }
+.prev b { font-weight: 500; font-style: normal; color: #F3EEE3; font-feature-settings: "lnum"; }
+.timer { position: absolute; bottom: 92px; left: 50%; width: 120px; margin-left: -60px; height: 2px; background: rgba(243, 238, 227, .15); border-radius: 1px; overflow: hidden; }
+.timer::after { content: ""; display: block; height: 100%; background: rgba(243, 238, 227, .7); animation: fill 2s linear infinite; transform-origin: left; }
+@keyframes fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- Watch ---------- */
+.stage { width: 360px; height: 780px; border-radius: 36px; background: #D9D2C3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+.stage .lbl { font: 600 10.5px var(--sans); letter-spacing: .14em; text-transform: uppercase; color: #4A4F5B; margin-top: -12px; }
+.watch { position: relative; width: 200px; height: 200px; border-radius: 50%; background: #000; color: #F3EEE3; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 9px #26272B, 0 0 0 10px #4A4B50, 0 22px 40px -14px rgba(0,0,0,.6); }
+.watch::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; border: 1px solid rgba(200, 87, 75, .45); }
+.w-big { font: 500 58px/1 var(--serif); font-feature-settings: "lnum", "tnum"; letter-spacing: -.02em; }
+.w-rec { display: flex; align-items: center; gap: 6px; margin-top: 8px; font: 600 9.5px var(--sans); letter-spacing: .16em; text-transform: uppercase; }
+.w-rec::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #E58A7C; }
+.w-prev { margin-top: 6px; font: italic 400 13px var(--serif); color: #B9BCC6; }
+.w-prev b { font-style: normal; font-weight: 500; color: #F3EEE3; }
+.face .w-big { font-size: 52px; margin-top: -26px; }
+.comp { position: absolute; bottom: 22px; left: 50%; margin-left: -26px; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(#E58A7C 0 78%, #262A33 78% 100%); }
+.comp::before { content: ""; position: absolute; inset: 2.5px; border-radius: 50%; background: #000; }
+.comp span { position: relative; font: 500 16px var(--serif); font-feature-settings: "lnum"; }
+
+/* ---------- Empty ---------- */
+.empty-msg { position: absolute; left: 82px; right: 28px; top: 196px; font: italic 400 19px/1.45 var(--serif); color: var(--ink-2); z-index: 2; }
+.empty-msg b { font-style: normal; font-weight: 500; color: var(--ink); }
+.empty-arrow { position: absolute; left: 196px; top: 470px; width: 60px; height: 130px; color: var(--mark); z-index: 2; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ================= Title block ================= -->
+<header class="intro">
+  <div>
+    <div class="kicker">Candidate A</div>
+    <h1>A · <em>Ledger</em></h1>
+    <p class="concept">The day as a page in a well-kept paper ledger: times in the margin, entries in ink, blanks left as dotted lines waiting to be filled in.</p>
+    <ol class="principles">
+      <li><b>Margin carries time.</b> Start times sit left of a double red margin rule; the entry and its duration read across like an account line.</li>
+      <li><b>Ink, not chips.</b> Tags are small-caps words in a muted ink with a pen underline. Unlabeled blocks are a dotted blank line — visibly "to be filled in".</li>
+      <li><b>One seal, one action.</b> Mark is a round ink stamp at thumb reach; capture feedback is the same stamp pressing down.</li>
+      <li><b>Serif for numbers, grotesk for controls.</b> Newsreader tabular figures for the record; Inter only for labels and buttons.</li>
+      <li><b>Paper by day, ink-navy by night.</b> Same ruling and margin in both modes; inks are re-mixed per mode to stay AA on their paper.</li>
+    </ol>
+  </div>
+  <div class="spec">
+    <section>
+      <h2>Paper &amp; ink</h2>
+      <div class="base">
+        <div class="sw"><i style="background:#F6F1E7"></i><b>Paper</b>#F6F1E7</div>
+        <div class="sw"><i style="background:#1E2433"></i><b>Ink</b>#1E2433</div>
+        <div class="sw"><i style="background:#C8574B"></i><b>Margin</b>#C8574B</div>
+        <div class="sw"><i style="background:#22304F"></i><b>Seal</b>#22304F</div>
+        <div class="sw"><i style="background:#131B2C"></i><b>Night paper</b>#131B2C</div>
+        <div class="sw"><i style="background:#ECE6D8"></i><b>Night ink</b>#ECE6D8</div>
+      </div>
+    </section>
+    <section>
+      <h2>Tag inks · light ◩ dark (all ≥ 4.5:1 on their paper)</h2>
+      <div class="inks">
+        <div class="sw ink" style="--l:#A8432F;--d:#E08A74"><i></i><b>Work</b><small>was #E57373</small></div>
+        <div class="sw ink" style="--l:#9A5B12;--d:#D9A55A"><i></i><b>Commute</b><small>was #FFB74D</small></div>
+        <div class="sw ink" style="--l:#7A6710;--d:#CDB65A"><i></i><b>Breakfast</b><small>was #FFF176</small></div>
+        <div class="sw ink" style="--l:#3F6B3A;--d:#8DB57F"><i></i><b>Lunch</b><small>was #81C784</small></div>
+        <div class="sw ink" style="--l:#1F6B66;--d:#6FB3AA"><i></i><b>Sleep</b><small>was #4DB6AC</small></div>
+        <div class="sw ink" style="--l:#2F5D8C;--d:#86AAD6"><i></i><b>Reading</b><small>was #64B5F6</small></div>
+        <div class="sw ink" style="--l:#5E4A8C;--d:#A795D4"><i></i><b>Exercise</b><small>was #9575CD</small></div>
+        <div class="sw ink" style="--l:#9B3B62;--d:#D98BA9"><i></i><b>Next tag</b><small>was #F06292</small></div>
+      </div>
+    </section>
+    <section>
+      <h2>Type</h2>
+      <div class="type">
+        <div><span class="lbl">Newsreader 500<br>lining · display</span><span class="s1">Today · 14:32</span></div>
+        <div><span class="lbl">Newsreader<br>tabular · rows</span><span class="s2">07:10 08:35 11:45 · 3h 10m</span></div>
+        <div><span class="lbl">Inter 600 caps</span><span class="s3">Work · Commute · Insert a point</span></div>
+        <div><span class="lbl">Caveat · marginalia</span><span class="s4">now</span></div>
+      </div>
+    </section>
+  </div>
+</header>
+
+<!-- ================= Frames ================= -->
+<div class="frames">
+
+  <!-- 01 Timeline light -->
+  <figure class="frame">
+    <div class="phone light">
+      <div class="status"><span>14:44</span><span class="r"><i class="sig"></i><i class="batt"></i></span></div>
+      <div class="app" id="tl-src">
+        <div class="hd">
+          <button class="day" aria-label="Jump to today">Today <em>· Oct 26</em></button>
+          <button class="icon-btn chev" aria-label="Previous day">‹</button>
+          <button class="icon-btn chev dim" aria-label="Next day">›</button>
+          <button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+        </div>
+        <div class="dbl"></div>
+        <div class="ledger">
+          <div class="row"><span class="t">07:10</span><span class="entry"><span class="tag c-breakfast">Breakfast</span></span><span class="dur">35m</span></div>
+          <div class="row"><span class="t">07:45</span><span class="entry"><span class="tag c-commute">Commute</span></span><span class="dur">50m</span></div>
+          <div class="row"><span class="t">08:35</span><span class="entry"><span class="tag c-work">Work</span></span><span class="dur">3h 10m</span></div>
+          <div class="row slip"><span class="t">11:45</span><span class="entry"><span class="blank"><i>Unlabeled</i></span></span><span class="dur">12s</span></div>
+          <div class="row"><span class="t">11:45</span><span class="entry"><span class="tag c-lunch">Lunch</span></span><span class="dur">1h 0m</span></div>
+          <div class="row"><span class="t">12:45</span><span class="entry"><span class="blank"><i>Unlabeled</i></span></span><span class="dur">1h 47m</span></div>
+          <div class="row current"><i class="pulse"></i><span class="t">14:32</span><span class="entry"><span class="blank"><i>Unlabeled</i></span></span><span class="dur"><span class="ip">In progress</span> · 12m</span>
+            <span class="now">now<svg viewBox="0 0 22 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 16 C 8 14, 14 10, 18 3"/><path d="M13 4 L18 3 L18.5 8"/></svg></span>
+          </div>
+        </div>
+        <button class="seal" aria-label="Mark"><i class="dot"></i><span class="lbl">Mark</span></button>
+      </div>
+      <i class="gesture"></i>
+    </div>
+    <figcaption>
+      <h3><span>01</span>Timeline · light</h3>
+      <ul class="notes">
+        <li>Double red margin rule separates <i>when</i> from <i>what</i>; times use the serif’s tabular figures so the column reads like a written ledger yet stays aligned.</li>
+        <li>The 12s slip stays honest but recedes (grey, italic). The live block's pulsing ink dot sits <i>on</i> the margin rule, with a scribbled "now".</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- 02 Timeline dark + undo -->
+  <figure class="frame">
+    <div class="phone dark">
+      <div class="status"><span>14:44</span><span class="r"><i class="sig"></i><i class="batt"></i></span></div>
+      <div class="app" data-clone></div>
+      <div class="snack"><span>Point deleted &nbsp;·</span><button>Undo</button></div>
+      <i class="gesture"></i>
+    </div>
+    <figcaption>
+      <h3><span>02</span>Timeline · dark + undo</h3>
+      <ul class="notes">
+        <li>Night paper is ink-navy, not black: the ruling and margin survive, and the seal inverts to cream so it stays the brightest object.</li>
+        <li>Undo arrives as a paper slip laid on the page, above the seal so the thumb never lands on it by accident.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- 03 Label sheet -->
+  <figure class="frame">
+    <div class="phone light">
+      <div class="status"><span>14:44</span><span class="r"><i class="sig"></i><i class="batt"></i></span></div>
+      <div class="ghost" data-clone></div>
+      <div class="scrim"></div>
+      <div class="sheet-wrap">
+        <div class="card">
+          <div class="card-hd">
+            <div class="times"><button class="time">12:45</button><span class="arr">→</span><button class="time">14:32</button></div>
+            <div class="sub"><b>1h 47m</b> · tap a time to change it</div>
+          </div>
+          <div class="card-bd">
+            <div class="chips">
+              <button class="chip c-work">Work</button>
+              <button class="chip c-commute">Commute</button>
+              <button class="chip c-breakfast">Breakfast</button>
+              <button class="chip c-lunch">Lunch</button>
+              <button class="chip c-sleep">Sleep</button>
+              <button class="chip c-reading">Reading</button>
+              <button class="chip c-exercise">Exercise</button>
+              <button class="chip new">+ New tag</button>
+            </div>
+            <input class="note" placeholder="Note (optional)" aria-label="Note (optional)">
+            <button class="btn-line"><svg viewBox="0 0 34 10" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 5h28"/><circle cx="3" cy="5" r="2.2" fill="currentColor"/><circle cx="31" cy="5" r="2.2" fill="currentColor"/><circle cx="17" cy="5" r="2.6" fill="var(--card)"/></svg>Insert a point in the middle</button>
+            <button class="btn-del">Delete start point</button>
+          </div>
+        </div>
+      </div>
+      <i class="gesture"></i>
+    </div>
+    <figcaption>
+      <h3><span>03</span>Label sheet</h3>
+      <ul class="notes">
+        <li>A torn-off index card: the red head rule separates the block's times (dotted = editable) from the actions below. Current block would read <i>12:45 → now</i>.</li>
+        <li>Tags are outlined ink stamps in last-used order — one tap applies and closes. Error variant under the times: <br><span class="err-spec">Outside the neighbouring points</span></li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- 04 Settings -->
+  <figure class="frame">
+    <div class="phone light">
+      <div class="status"><span>14:44</span><span class="r"><i class="sig"></i><i class="batt"></i></span></div>
+      <div class="app">
+        <div class="topbar">
+          <button class="icon-btn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+          <h2>Settings</h2>
+        </div>
+        <div class="dbl"></div>
+        <div class="sect">Tags</div>
+        <div class="tags">
+          <div class="trow c-work"><i></i><span class="nm">Work</span><button>Rename</button><button class="del">Delete</button></div>
+          <div class="trow c-commute"><i></i><span class="nm">Commute</span><button>Rename</button><button class="del">Delete</button></div>
+          <div class="trow c-breakfast"><i></i><span class="nm">Breakfast</span><button>Rename</button><button class="del">Delete</button></div>
+          <div class="trow c-lunch"><i></i><span class="nm">Lunch</span><button>Rename</button><button class="del">Delete</button></div>
+          <div class="trow c-sleep"><i></i><span class="nm">Sleep</span><button>Rename</button><button class="del">Delete</button></div>
+          <div class="trow c-reading"><i></i><span class="nm">Reading</span><button>Rename</button><button class="del">Delete</button></div>
+          <div class="trow c-exercise"><i></i><span class="nm">Exercise</span><button>Rename</button><button class="del">Delete</button></div>
+        </div>
+        <button class="btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export CSV</button>
+      </div>
+      <i class="gesture"></i>
+    </div>
+    <figcaption>
+      <h3><span>04</span>Settings</h3>
+      <ul class="notes">
+        <li>Tag names are set in the serif like entries; the ink dot carries a faint halo so even the paler inks read as a colour, not a smudge.</li>
+        <li>Export CSV borrows the seal's ink — the only filled shape on the screen, so the one primary action is unmistakable.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- 05 Capture overlay -->
+  <figure class="frame">
+    <div class="phone light">
+      <div class="status"><span>14:44</span><span class="r"><i class="sig"></i><i class="batt"></i></span></div>
+      <div class="ghost" data-clone></div>
+      <div class="capture">
+        <div class="stamp">
+          <div class="big">14:32</div>
+          <div class="rec">Recorded</div>
+          <div class="prev">Previous block <b>1h 47m</b></div>
+        </div>
+        <i class="timer"></i>
+      </div>
+      <i class="gesture"></i>
+    </div>
+    <figcaption>
+      <h3><span>05</span>Phone capture confirm</h3>
+      <ul class="notes">
+        <li>The confirmation is the seal pressing into the page: a double-ring stamp that lands with a slight overshoot and tilt.</li>
+        <li>A hairline under the stamp fills over ~2 s, telling the owner it will dismiss itself — no button needed.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- 06 Watch -->
+  <figure class="frame">
+    <div class="stage">
+      <div class="watch">
+        <div class="w-big">14:32</div>
+        <div class="w-rec">Recorded</div>
+        <div class="w-prev">Previous block <b>1h 47m</b></div>
+      </div>
+      <div class="lbl">Confirm · after double-press</div>
+      <div class="watch face">
+        <div class="w-big">15:19</div>
+        <div class="comp"><span>47m</span></div>
+      </div>
+      <div class="lbl">Watch face · complication</div>
+    </div>
+    <figcaption>
+      <h3><span>06</span>Galaxy Watch</h3>
+      <ul class="notes">
+        <li>OLED black, but the serif numerals and a faint red margin ring keep it recognisably the same notebook.</li>
+        <li>Complication: "47m" since last mark, with an ink arc filling toward the hour — a glance says how stale the open block is.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+  <!-- 07 Empty state -->
+  <figure class="frame">
+    <div class="phone light">
+      <div class="status"><span>14:44</span><span class="r"><i class="sig"></i><i class="batt"></i></span></div>
+      <div class="app">
+        <div class="hd">
+          <button class="day" aria-label="Jump to today">Today <em>· Oct 26</em></button>
+          <button class="icon-btn chev" aria-label="Previous day">‹</button>
+          <button class="icon-btn chev dim" aria-label="Next day">›</button>
+          <button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+        </div>
+        <div class="dbl"></div>
+        <div class="ledger"></div>
+        <p class="empty-msg">Press <b>Mark</b>, or bind the side button’s double press to “Mark”.</p>
+        <svg class="empty-arrow" viewBox="0 0 60 130" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10 4 C 40 30, 48 70, 30 122"/><path d="M22 112 L30 123 L39 114"/></svg>
+        <button class="seal" aria-label="Mark"><i class="dot"></i><span class="lbl">Mark</span></button>
+      </div>
+      <i class="gesture"></i>
+    </div>
+    <figcaption>
+      <h3><span>07</span>Empty state</h3>
+      <ul class="notes">
+        <li>A fresh ruled page. The hint is written inside the margin like a note to self, with a pen arrow down to the seal.</li>
+      </ul>
+    </figcaption>
+  </figure>
+
+</div>
+</div>
+
+<script>
+  // Reuse the light timeline markup as the dark frame and as the dimmed background of overlays.
+  const src = document.getElementById('tl-src');
+  document.querySelectorAll('[data-clone]').forEach(el => {
+    const copy = src.cloneNode(true);
+    copy.removeAttribute('id');
+    if (el.classList.contains('app')) el.replaceWith(copy); else el.appendChild(copy);
+  });
+</script>
+</body>
+</html>

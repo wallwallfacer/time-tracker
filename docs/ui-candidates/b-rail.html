@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B · Rail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght,ROND@6..144,400..800,0..100&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=block" rel="stylesheet">
+<style>
+/* ---------- Board ---------- */
+:root{
+  --font:"Google Sans Flex","Plus Jakarta Sans",system-ui,sans-serif;
+  --board:#EEEBF3; --board-ink:#1B1B21; --board-muted:#5A5966; --board-card:#FBF8FF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--board);color:var(--board-ink);font-family:var(--font);font-optical-sizing:auto;
+  -webkit-font-smoothing:antialiased;padding:48px 40px 80px}
+.ms{font-family:"Material Symbols Rounded";font-weight:400;font-style:normal;font-size:24px;line-height:1;
+  display:inline-block;font-variation-settings:"FILL" 0,"opsz" 24;user-select:none;letter-spacing:0;white-space:nowrap}
+.ms.f{font-variation-settings:"FILL" 1,"opsz" 24}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.tab{font-variant-numeric:tabular-nums}
+
+/* Title block */
+.intro{display:grid;grid-template-columns:minmax(320px,1.1fr) minmax(320px,1fr);gap:40px;max-width:1240px;margin-bottom:48px}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#4355B9}
+.intro h1{font-size:64px;line-height:1;font-weight:650;letter-spacing:-.02em;margin:10px 0 14px;font-variation-settings:"ROND" 100}
+.intro .concept{font-size:20px;line-height:1.4;color:#33323C;max-width:560px}
+.intro ul{margin:22px 0 0 0;list-style:none;display:grid;gap:10px}
+.intro li{font-size:15px;line-height:1.45;color:#33323C;padding-left:26px;position:relative}
+.intro li::before{content:"";position:absolute;left:4px;top:5px;width:10px;height:10px;border-radius:50%;background:#1B1B21;box-shadow:0 0 0 3px #DEE0FF}
+.intro li b{font-weight:650}
+.note{margin-top:22px;display:flex;gap:12px;align-items:flex-start;background:#DEE0FF;color:#00105C;border-radius:20px;padding:14px 18px;font-size:14.5px;line-height:1.45;max-width:600px}
+.note .ms{font-size:22px;margin-top:1px}
+.panel{background:var(--board-card);border-radius:28px;padding:22px 24px}
+.panel h3{font-size:12px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--board-muted);margin-bottom:12px}
+.panel+.panel{margin-top:14px}
+.sw{display:flex;flex-wrap:wrap;gap:10px}
+.chipsw{display:flex;align-items:center;gap:8px;border-radius:14px;padding:6px 12px 6px 6px;font-size:13px;font-weight:600}
+.chipsw i{width:22px;height:22px;border-radius:50%;display:block}
+.sysw{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.sysw div{height:52px;border-radius:16px;padding:8px 10px;font-size:11px;font-weight:600;display:flex;align-items:flex-end}
+.spec{display:grid;gap:6px}
+.spec .row1{display:flex;align-items:baseline;gap:18px}
+.spec .disp{font-size:68px;line-height:1;font-weight:500;letter-spacing:-.02em;font-variation-settings:"ROND" 100}
+.spec small{font-size:12px;color:var(--board-muted)}
+
+/* Frames */
+.frames{display:flex;flex-wrap:wrap;gap:40px 36px;align-items:flex-start}
+.fw{width:360px}
+.fw h2{font-size:15px;font-weight:650;margin-bottom:12px;display:flex;gap:8px;align-items:center}
+.fw h2 span{font-size:12px;font-weight:600;color:var(--board-muted);background:#E1E0EA;border-radius:8px;padding:2px 8px}
+.callouts{margin-top:14px;display:grid;gap:8px}
+.callouts p{font-size:13px;line-height:1.45;color:#3D3C47;padding-left:30px;position:relative}
+.callouts p b{position:absolute;left:0;top:0;width:20px;height:20px;border-radius:50%;background:#1B1B21;color:#fff;font-size:11px;display:grid;place-items:center}
+
+/* ---------- Theme tokens (M3 tonal, seed #4355B9) ---------- */
+.light{
+  --surface:#FBF8FF;--surf-low:#F5F2FA;--surf:#EFEDF4;--surf-high:#E9E7EF;--surf-highest:#E3E1E9;
+  --on-surface:#1B1B21;--on-var:#46464F;--outline:#777680;--outline-var:#C7C5D0;
+  --primary:#4355B9;--on-primary:#fff;--pc:#DEE0FF;--on-pc:#00105C;--sc:#E1E0F9;--on-sc:#191A2C;
+  --error:#BA1A1A;--ec:#FFDAD6;--on-ec:#410002;--inv-surf:#303036;--inv-on:#F2EFF7;--inv-primary:#BAC3FF;
+  /* tag tones: rail (tone ~50 for 3:1 on surface) / container (tone 90) / on-container (tone 10) */
+  --r-red:#D9534F;--c-red:#FFDAD6;--o-red:#410002;
+  --r-org:#D98200;--c-org:#FFDDB5;--o-org:#2A1800;
+  --r-yel:#A89400;--c-yel:#F3E98C;--o-yel:#201C00;
+  --r-grn:#43A047;--c-grn:#C3EFC0;--o-grn:#002106;
+  --r-tea:#00897B;--c-tea:#B4EFE6;--o-tea:#00201D;
+  --r-blu:#1E88E5;--c-blu:#D0E4FF;--o-blu:#001D35;
+  --r-pur:#7E57C2;--c-pur:#E9DDFF;--o-pur:#22005D;
+  --r-pnk:#D81B60;--c-pnk:#FFD9E2;--o-pnk:#3E001D;
+}
+.dark{
+  --surface:#121318;--surf-low:#1A1B21;--surf:#1F1F25;--surf-high:#292A2F;--surf-highest:#34343A;
+  --on-surface:#E4E1E9;--on-var:#C7C5D0;--outline:#91909A;--outline-var:#46464F;
+  --primary:#BAC3FF;--on-primary:#08218A;--pc:#293CA0;--on-pc:#DEE0FF;--sc:#444559;--on-sc:#E1E0F9;
+  --error:#FFB4AB;--ec:#93000A;--on-ec:#FFDAD6;--inv-surf:#E4E1E9;--inv-on:#303036;--inv-primary:#4355B9;
+  /* rail = the stored palette hex itself; container tone 30 / on-container tone 90 */
+  --r-red:#E57373;--c-red:#6B2A27;--o-red:#FFDAD6;
+  --r-org:#FFB74D;--c-org:#5E4100;--o-org:#FFDDB5;
+  --r-yel:#FFF176;--c-yel:#4C4600;--o-yel:#F3E98C;
+  --r-grn:#81C784;--c-grn:#1F5223;--o-grn:#C3EFC0;
+  --r-tea:#4DB6AC;--c-tea:#00504A;--o-tea:#B4EFE6;
+  --r-blu:#64B5F6;--c-blu:#00497C;--o-blu:#D0E4FF;
+  --r-pur:#9575CD;--c-pur:#4F378A;--o-pur:#E9DDFF;
+  --r-pnk:#F06292;--c-pnk:#7A2949;--o-pnk:#FFD9E2;
+}
+.t-work{--tag:var(--r-blu);--tc:var(--c-blu);--otc:var(--o-blu)}
+.t-commute{--tag:var(--r-org);--tc:var(--c-org);--otc:var(--o-org)}
+.t-breakfast{--tag:var(--r-yel);--tc:var(--c-yel);--otc:var(--o-yel)}
+.t-lunch{--tag:var(--r-grn);--tc:var(--c-grn);--otc:var(--o-grn)}
+.t-sleep{--tag:var(--r-pur);--tc:var(--c-pur);--otc:var(--o-pur)}
+.t-reading{--tag:var(--r-tea);--tc:var(--c-tea);--otc:var(--o-tea)}
+.t-exercise{--tag:var(--r-red);--tc:var(--c-red);--otc:var(--o-red)}
+
+/* ---------- Phone ---------- */
+.phone{width:360px;height:780px;border-radius:36px;overflow:hidden;position:relative;background:var(--surface);color:var(--on-surface);
+  box-shadow:0 0 0 1px rgba(0,0,0,.08),0 24px 48px -16px rgba(30,30,60,.28),0 2px 6px rgba(30,30,60,.08);font-family:var(--font)}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column}
+.status{height:36px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:4px 24px 0 26px;font-size:14px;font-weight:550;position:relative;z-index:5}
+.status .ms{font-size:17px;margin-left:3px}
+.gesture{height:20px;flex:none;display:grid;place-items:center;position:relative;z-index:5}
+.gesture i{width:108px;height:4px;border-radius:2px;background:var(--on-surface);opacity:.85}
+
+/* App bar */
+.appbar{height:64px;flex:none;display:flex;align-items:center;padding:0 8px 0 4px;gap:2px}
+.ib{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:var(--on-var)}
+.daytitle{height:44px;padding:0 14px;border-radius:22px;font-size:22px;font-weight:650;letter-spacing:-.01em;display:flex;align-items:center;gap:6px;
+  font-variation-settings:"ROND" 100}
+.daytitle .today{width:8px;height:8px;border-radius:50%;background:var(--primary)}
+.appbar .sp{flex:1}
+.gear{background:var(--surf-high);color:var(--on-surface)}
+
+/* Timeline rail */
+.tl{flex:1;position:relative;overflow:hidden}
+.rows{position:absolute;left:16px;right:16px;bottom:100px}
+.row{display:grid;grid-template-columns:44px 22px 1fr;column-gap:8px;height:var(--h);position:relative}
+.row time{font-size:13.5px;font-weight:600;line-height:20px;padding-top:11px;text-align:right;color:var(--on-var);font-variant-numeric:tabular-nums}
+.rail{position:relative}
+.dot{position:absolute;left:4px;top:14px;width:14px;height:14px;border-radius:50%;background:var(--on-surface);box-shadow:0 0 0 3px var(--surface);z-index:2}
+.seg{position:absolute;left:6px;width:10px;top:30px;height:calc(var(--h) - 18px);border-radius:5px;background:var(--tag)}
+.card{height:calc(var(--h) - 6px);border-radius:18px;background:var(--tc);color:var(--otc);padding:11px 14px 0 16px;display:flex;flex-direction:column;cursor:pointer}
+.line{display:flex;justify-content:space-between;align-items:center;gap:8px;line-height:20px}
+.name{font-size:15.5px;font-weight:650}
+.dur{font-size:14.5px;font-weight:550;font-variant-numeric:tabular-nums;opacity:.9}
+.sub{margin-top:auto;margin-bottom:10px;font-size:12px;font-weight:550;display:flex;align-items:center;gap:4px;opacity:.78}
+.sub .ms{font-size:16px}
+/* compressed long block: broken-axis glyph */
+.cmp .seg{background:linear-gradient(to bottom,var(--tag) 0 44%,transparent 44% 56%,var(--tag) 56% 100%)}
+.cmp .seg svg{position:absolute;left:-4px;top:50%;transform:translateY(-50%);overflow:visible}
+/* unlabeled: hatched rail + ghost card */
+.unl .seg{background:repeating-linear-gradient(-45deg,var(--outline) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 1.5px var(--outline)}
+.unl .card{background:transparent;border:1.5px dashed var(--outline);color:var(--on-var);padding:9.5px 12.5px 0 14.5px}
+.unl .name{font-weight:550;font-style:italic}
+.addchip{margin-top:auto;margin-bottom:10px;align-self:flex-start;height:32px;border-radius:12px;background:var(--sc);color:var(--on-sc);
+  display:flex;align-items:center;gap:4px;padding:0 12px 0 8px;font-size:13px;font-weight:600}
+.addchip .ms{font-size:18px}
+/* current block: growing rail tip */
+.live .card{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 7%,transparent)}
+.live .dur{color:var(--primary);font-weight:650;opacity:1}
+.live .seg{overflow:visible}
+.live .seg::after{content:"";position:absolute;left:0;right:0;bottom:0;height:70%;border-radius:5px;
+  background:linear-gradient(to bottom,transparent,var(--primary) 70%,color-mix(in srgb,var(--primary) 60%,white));background-size:100% 200%;
+  animation:grow 2.4s ease-in-out infinite}
+.live .seg::before{content:"";position:absolute;left:-3px;bottom:-8px;width:16px;height:16px;border-radius:50%;background:var(--primary);
+  box-shadow:0 0 0 0 color-mix(in srgb,var(--primary) 50%,transparent);animation:ping 1.6s ease-out infinite;z-index:1}
+@keyframes grow{0%,100%{background-position:0 0;transform:scaleY(.92);transform-origin:bottom}50%{background-position:0 100%;transform:scaleY(1)}}
+@keyframes ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--primary) 55%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
+.nowline{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--primary)}
+.nowline .p{width:7px;height:7px;border-radius:50%;background:var(--primary);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+
+/* FAB */
+.fab{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);height:72px;padding:0 34px 0 26px;border-radius:24px;
+  background:var(--pc);color:var(--on-pc);display:flex;align-items:center;gap:14px;font-size:21px;font-weight:650;letter-spacing:.01em;
+  font-variation-settings:"ROND" 100;
+  box-shadow:0 6px 14px -4px rgba(20,30,90,.35),0 2px 4px rgba(20,30,90,.18);z-index:3}
+.fab .mk{width:18px;height:18px;border-radius:50%;background:var(--on-pc);box-shadow:0 0 0 4px color-mix(in srgb,var(--on-pc) 22%,transparent)}
+.tl::after{content:"";position:absolute;left:0;right:0;bottom:0;height:110px;background:linear-gradient(to bottom,transparent,var(--surface) 55%);pointer-events:none;z-index:2}
+
+/* Snackbar */
+.snack{position:absolute;left:16px;right:16px;bottom:104px;min-height:52px;border-radius:16px;background:var(--inv-surf);color:var(--inv-on);
+  display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 18px;font-size:14.5px;font-weight:500;z-index:4;
+  box-shadow:0 6px 16px -6px rgba(0,0,0,.5)}
+.snack button{height:40px;padding:0 14px;border-radius:20px;color:var(--inv-primary);font-weight:650;font-size:14.5px}
+
+/* Scrims & sheet */
+.scrim{position:absolute;inset:0;background:rgba(10,10,20,.38);z-index:6}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:7;background:var(--surf-low);border-radius:30px 30px 0 0;padding:0 20px;
+  box-shadow:0 -8px 30px -8px rgba(0,0,0,.25);display:flex;flex-direction:column}
+.handle{width:36px;height:4px;border-radius:2px;background:var(--on-var);opacity:.45;margin:12px auto 14px}
+.sh-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--on-var);margin-bottom:10px}
+.times{display:flex;align-items:center;gap:8px}
+.tbtn{flex:1;height:68px;border-radius:22px;background:var(--sc);color:var(--on-sc);font-size:32px;font-weight:600;letter-spacing:-.01em;
+  font-variant-numeric:tabular-nums;font-variation-settings:"ROND" 100;display:flex;align-items:center;justify-content:center;gap:6px;position:relative}
+.tbtn .ms{font-size:18px;opacity:.6;position:absolute;right:12px;top:10px}
+.times>.ms{color:var(--on-var)}
+.hint{font-size:14px;color:var(--on-var);margin:10px 2px 0}
+.hint b{color:var(--on-surface);font-weight:650}
+.lab{font-size:13px;font-weight:650;color:var(--on-var);margin:20px 2px 10px;display:flex;justify-content:space-between}
+.lab span{font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{height:44px;border-radius:15px;background:var(--tc);color:var(--otc);padding:0 16px 0 12px;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:650}
+.chip i{width:12px;height:12px;border-radius:50%;background:var(--tag)}
+.chip.new{background:transparent;color:var(--primary);box-shadow:inset 0 0 0 1.5px var(--outline-var);padding:0 16px 0 10px}
+.chip.new .ms{font-size:20px}
+.field{margin-top:18px;height:56px;border-radius:14px 14px 4px 4px;background:var(--surf-highest);border-bottom:1.5px solid var(--on-var);
+  display:flex;align-items:center;gap:12px;padding:0 16px;color:var(--on-var);font-size:16px}
+.btn{height:52px;border-radius:26px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15.5px;font-weight:650;width:100%}
+.btn.tonal{background:var(--pc);color:var(--on-pc);margin-top:18px}
+.btn.danger{color:var(--error);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--error) 45%,transparent);margin-top:10px}
+.btn.filled{background:var(--primary);color:var(--on-primary);height:60px;border-radius:30px;font-size:17px}
+.btn .ms{font-size:21px}
+.err{display:flex;gap:6px;align-items:center;color:var(--error);font-size:13.5px;font-weight:600}
+.err .ms{font-size:18px}
+
+/* Settings */
+.topbar{height:64px;flex:none;display:flex;align-items:center;gap:4px;padding:0 4px}
+.topbar h4{font-size:22px;font-weight:650;font-variation-settings:"ROND" 100}
+.set{flex:1;padding:4px 16px 0;overflow:hidden}
+.sec{font-size:14px;font-weight:650;color:var(--primary);margin:6px 8px 10px}
+.group{display:grid;gap:3px}
+.item{height:58px;background:var(--surf);border-radius:6px;display:flex;align-items:center;padding:0 6px 0 12px;gap:12px}
+.item:first-child{border-radius:24px 24px 6px 6px}.item:last-child{border-radius:6px 6px 24px 24px}
+.sw36{width:36px;height:36px;border-radius:50%;background:var(--tc);display:grid;place-items:center}
+.sw36 i{width:14px;height:14px;border-radius:50%;background:var(--tag)}
+.item .nm{flex:1;font-size:16px;font-weight:600}
+.tb{height:40px;padding:0 10px;border-radius:20px;font-size:14px;font-weight:650;color:var(--primary)}
+.tb.del{color:var(--error)}
+.help{font-size:13px;color:var(--on-var);margin:10px 8px 0;line-height:1.4}
+
+/* Capture overlay */
+.cap{position:absolute;inset:0;z-index:6;background:rgba(14,15,24,.80);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;color:#E4E1E9;text-align:center}
+.drop{width:10px;height:120px;border-radius:5px;background:linear-gradient(to bottom,transparent,#BAC3FF);position:relative;margin-bottom:22px}
+.drop::after{content:"";position:absolute;left:50%;bottom:-12px;width:26px;height:26px;border-radius:50%;background:#E4E1E9;transform:translateX(-50%);
+  box-shadow:0 0 0 6px rgba(186,195,255,.28);animation:ping2 2s ease-out infinite}
+@keyframes ping2{0%{box-shadow:0 0 0 0 rgba(186,195,255,.55)}100%{box-shadow:0 0 0 26px rgba(186,195,255,0)}}
+.big{font-size:104px;line-height:1;font-weight:500;letter-spacing:-.03em;font-variant-numeric:tabular-nums;font-variation-settings:"ROND" 100;margin-top:18px}
+.rec{margin-top:18px;height:44px;border-radius:22px;background:#293CA0;color:#DEE0FF;display:inline-flex;align-items:center;gap:10px;padding:0 20px 0 16px;font-size:17px;font-weight:650}
+.rec i{width:12px;height:12px;border-radius:50%;background:#DEE0FF}
+.prev{margin-top:14px;font-size:16px;color:#C7C5D0}
+.prev b{color:#E4E1E9;font-weight:650}
+.timer{width:64px;height:4px;border-radius:2px;background:rgba(255,255,255,.18);margin-top:40px;overflow:hidden}
+.timer i{display:block;height:100%;background:#BAC3FF;animation:drain 2s linear infinite}
+@keyframes drain{from{width:100%}to{width:0}}
+
+/* Watch */
+.watches{display:flex;flex-direction:column;gap:22px;align-items:center;width:360px;padding-top:6px}
+.watch{width:200px;height:200px;border-radius:50%;background:#000;color:#E4E1E9;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 0 0 10px #2A2A30,0 0 0 11px #45454d,0 20px 40px -12px rgba(0,0,0,.45)}
+.watch .wt{font-size:52px;font-weight:550;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;font-variation-settings:"ROND" 100}
+.watch .wr{margin-top:10px;height:28px;border-radius:14px;background:#293CA0;color:#DEE0FF;display:flex;align-items:center;gap:6px;padding:0 12px 0 10px;font-size:13px;font-weight:650}
+.watch .wr i{width:8px;height:8px;border-radius:50%;background:#DEE0FF}
+.watch .wp{margin-top:8px;font-size:12px;color:#C7C5D0}
+.watch .wp b{color:#E4E1E9}
+.face .ft{font-size:58px;font-weight:450;line-height:1;letter-spacing:-.02em;font-variation-settings:"ROND" 100}
+.face .fd{font-size:12px;color:#C7C5D0;margin-top:4px;font-weight:550}
+.comp{margin-top:12px;width:54px;height:54px;border-radius:50%;background:#1F1F25;box-shadow:inset 0 0 0 2px #BAC3FF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.comp i{width:7px;height:7px;border-radius:50%;background:#BAC3FF}
+.comp span{font-size:15px;font-weight:700;color:#E4E1E9;line-height:1}
+.wcap{font-size:12px;font-weight:600;color:var(--board-muted);margin-top:-8px}
+</style>
+</head>
+<body>
+
+<section class="intro">
+  <div>
+    <div class="eyebrow">Candidate B · Material 3 Expressive</div>
+    <h1>B · Rail</h1>
+    <p class="concept">The same list of blocks, drawn on a vertical rail. Each mark is a dot; the segment below it is as tall as the time it covers. You can see where the day went before reading a single number.</p>
+    <ul>
+      <li><b>Height follows duration.</b> 1.2&nbsp;px per minute, a 48&nbsp;px floor so a 12&nbsp;s block stays tappable, a 140&nbsp;px cap with a broken-axis squiggle for long blocks.</li>
+      <li><b>Points are punctuation.</b> Marks are ink-black dots on the rail; time sits beside the dot, tag and duration sit in a tonal card.</li>
+      <li><b>Unlabeled looks unfinished.</b> Hatched rail and a dashed ghost card invite a tap; labeled blocks are solid tonal fills.</li>
+      <li><b>One big action.</b> A 72&nbsp;px extended FAB, bottom center, in primary container. Everything else stays quiet.</li>
+      <li><b>Native to Android 16.</b> Tonal surfaces, 18–30&nbsp;px shapes, Google Sans Flex with full roundness on display text.</li>
+    </ul>
+    <div class="note"><span class="ms">info</span><div><b>Layout, not a chart.</b> The rail is how the existing rows are drawn: same rows, same order, same taps. It adds no totals, axes, or statistics, and nothing is computed that the list did not already show.</div></div>
+  </div>
+  <div>
+    <div class="panel">
+      <h3>System tones · seed #4355B9</h3>
+      <div class="sysw">
+        <div style="background:#4355B9;color:#fff">primary</div>
+        <div style="background:#DEE0FF;color:#00105C">primary container</div>
+        <div style="background:#E1E0F9;color:#191A2C">secondary container</div>
+        <div style="background:#BA1A1A;color:#fff">error</div>
+        <div style="background:#FBF8FF;color:#1B1B21;box-shadow:inset 0 0 0 1px #C7C5D0">surface</div>
+        <div style="background:#EFEDF4;color:#1B1B21">surface container</div>
+        <div style="background:#121318;color:#E4E1E9">surface (dark)</div>
+        <div style="background:#293CA0;color:#DEE0FF">primary container (dark)</div>
+      </div>
+    </div>
+    <div class="panel light" style="background:#FBF8FF">
+      <h3>Tag tones · rail / container / text, from the stored palette</h3>
+      <div class="sw">
+        <span class="chipsw" style="background:#FFDAD6;color:#410002"><i style="background:#E57373"></i>#E57373</span>
+        <span class="chipsw" style="background:#FFDDB5;color:#2A1800"><i style="background:#FFB74D"></i>#FFB74D</span>
+        <span class="chipsw" style="background:#F3E98C;color:#201C00"><i style="background:#FFF176;box-shadow:inset 0 0 0 1px #A89400"></i>#FFF176</span>
+        <span class="chipsw" style="background:#C3EFC0;color:#002106"><i style="background:#81C784"></i>#81C784</span>
+        <span class="chipsw" style="background:#B4EFE6;color:#00201D"><i style="background:#4DB6AC"></i>#4DB6AC</span>
+        <span class="chipsw" style="background:#D0E4FF;color:#001D35"><i style="background:#64B5F6"></i>#64B5F6</span>
+        <span class="chipsw" style="background:#E9DDFF;color:#22005D"><i style="background:#9575CD"></i>#9575CD</span>
+        <span class="chipsw" style="background:#FFD9E2;color:#3E001D"><i style="background:#F06292"></i>#F06292</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Type · Google Sans Flex</h3>
+      <div class="spec">
+        <div class="row1"><span class="disp tab">14:32</span><small>Display 104 / 500 · ROND 100 · tabular</small></div>
+        <div style="font-size:22px;font-weight:650;font-variation-settings:'ROND' 100">Today · Oct 26 <small style="font-weight:400">Title 22 / 650</small></div>
+        <div style="font-size:15.5px;font-weight:650">Breakfast <span style="font-weight:550;opacity:.85">35m</span> <small style="font-weight:400">Card 15.5 / 650 + 14.5 / 550</small></div>
+        <div style="font-size:14px;color:#46464F">1h 47m · tap a time to change it <small>Body 14 / 400</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Timeline rows, defined once and cloned into each timeline frame.
+     Height rule: h = clamp(48px, 1.2px × minutes, 140px). -->
+<template id="rows">
+  <div class="row t-breakfast" style="--h:48px"><time>07:10</time><div class="rail"><i class="seg"></i><b class="dot"></b></div>
+    <div class="card"><div class="line"><span class="name">Breakfast</span><span class="dur">35m</span></div></div></div>
+  <div class="row t-commute" style="--h:60px"><time>07:45</time><div class="rail"><i class="seg"></i><b class="dot"></b></div>
+    <div class="card"><div class="line"><span class="name">Commute</span><span class="dur">50m</span></div></div></div>
+  <div class="row t-work cmp" style="--h:140px"><time>08:35</time><div class="rail"><i class="seg"><svg width="18" height="20" viewBox="0 0 18 20"><path d="M1 4.5q4-3.5 8 0t8 0M1 15.5q4-3.5 8 0t8 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--on-var)"/></svg></i><b class="dot"></b></div>
+    <div class="card"><div class="line"><span class="name">Work</span><span class="dur">3h 10m</span></div><div class="sub"><span class="ms">compress</span>Compressed to fit</div></div></div>
+  <div class="row unl" style="--h:48px"><time>11:45</time><div class="rail"><i class="seg"></i><b class="dot"></b></div>
+    <div class="card"><div class="line"><span class="name">Unlabeled</span><span class="dur">12s</span></div></div></div>
+  <div class="row t-lunch" style="--h:72px"><time>11:45</time><div class="rail"><i class="seg"></i><b class="dot"></b></div>
+    <div class="card"><div class="line"><span class="name">Lunch</span><span class="dur">1h 0m</span></div></div></div>
+  <div class="row unl" style="--h:128px"><time>12:45</time><div class="rail"><i class="seg"></i><b class="dot"></b></div>
+    <div class="card"><div class="line"><span class="name">Unlabeled</span><span class="dur">1h 47m</span></div><span class="addchip"><span class="ms">sell</span>Tap to label</span></div></div>
+  <div class="row unl live" style="--h:64px"><time>14:32</time><div class="rail"><i class="seg"></i><b class="dot"></b></div>
+    <div class="card"><div class="line"><span class="name">Unlabeled</span></div>
+      <div class="line" style="margin-top:3px"><span class="nowline"><i class="p"></i>In progress · <span class="tab live">12m 08s</span></span></div></div></div>
+</template>
+
+<div class="frames">
+
+  <!-- 1. Timeline light -->
+  <div class="fw">
+    <h2>Timeline <span>Light</span></h2>
+    <div class="phone light"><div class="screen">
+      <div class="status"><span class="tab">14:44</span><span><span class="ms f">signal_cellular_4_bar</span><span class="ms f">wifi</span><span class="ms f">battery_5_bar</span></span></div>
+      <header class="appbar">
+        <button class="ib" aria-label="Previous day"><span class="ms">chevron_left</span></button>
+        <button class="daytitle" aria-label="Jump to today">Today · Oct 26</button>
+        <button class="ib" aria-label="Next day"><span class="ms">chevron_right</span></button>
+        <span class="sp"></span>
+        <button class="ib gear" aria-label="Settings"><span class="ms">settings</span></button>
+      </header>
+      <main class="tl"><div class="rows"></div><button class="fab"><i class="mk"></i>Mark</button></main>
+      <div class="gesture"><i></i></div>
+    </div></div>
+    <div class="callouts">
+      <p><b>1</b>Rail height = duration, floored at 48&nbsp;px (the 12&nbsp;s glitch block) and capped at 140&nbsp;px with a broken-axis squiggle (Work, 3h&nbsp;10m). Rows, order and taps match today's list exactly.</p>
+      <p><b>2</b>The current block's rail tip breathes with a gradient and a pinging end cap; the card ticks live seconds. FAB sits over a surface fade so it never covers a time.</p>
+    </div>
+  </div>
+
+  <!-- 2. Timeline dark + undo snackbar -->
+  <div class="fw">
+    <h2>Timeline <span>Dark · undo state</span></h2>
+    <div class="phone dark"><div class="screen">
+      <div class="status"><span class="tab">14:44</span><span><span class="ms f">signal_cellular_4_bar</span><span class="ms f">wifi</span><span class="ms f">battery_5_bar</span></span></div>
+      <header class="appbar">
+        <button class="ib" aria-label="Previous day"><span class="ms">chevron_left</span></button>
+        <button class="daytitle" aria-label="Jump to today">Today · Oct 26</button>
+        <button class="ib" aria-label="Next day"><span class="ms">chevron_right</span></button>
+        <span class="sp"></span>
+        <button class="ib gear" aria-label="Settings"><span class="ms">settings</span></button>
+      </header>
+      <main class="tl"><div class="rows"></div>
+        <div class="snack"><span>Point deleted</span><button>Undo</button></div>
+        <button class="fab"><i class="mk"></i>Mark</button></main>
+      <div class="gesture"><i></i></div>
+    </div></div>
+    <div class="callouts">
+      <p><b>1</b>Dark rails use the stored palette hex as-is; light rails shift to tone ~50 so every segment clears 3:1 against the surface. Cards use tone-30 containers with tone-90 text.</p>
+      <p><b>2</b>After a long-press delete, the M3 snackbar rises above the FAB for 4&nbsp;s. Inverse surface keeps it legible over any tag color.</p>
+    </div>
+  </div>
+
+  <!-- 3. Label sheet -->
+  <div class="fw">
+    <h2>Label sheet <span>Light</span></h2>
+    <div class="phone light"><div class="screen">
+      <div class="status"><span class="tab">14:44</span><span><span class="ms f">signal_cellular_4_bar</span><span class="ms f">wifi</span><span class="ms f">battery_5_bar</span></span></div>
+      <header class="appbar">
+        <button class="ib"><span class="ms">chevron_left</span></button>
+        <button class="daytitle">Today · Oct 26</button>
+        <button class="ib"><span class="ms">chevron_right</span></button>
+        <span class="sp"></span>
+        <button class="ib gear"><span class="ms">settings</span></button>
+      </header>
+      <main class="tl"><div class="rows"></div><button class="fab"><i class="mk"></i>Mark</button></main>
+      <div class="gesture"><i></i></div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sh-top"><span>Label block</span></div>
+        <div class="times">
+          <button class="tbtn">12:45</button>
+          <span class="ms">arrow_forward</span>
+          <button class="tbtn">14:32</button>
+        </div>
+        <p class="hint"><b>1h 47m</b> · tap a time to change it</p>
+        <div class="lab">Tags <span>last used first</span></div>
+        <div class="chips">
+          <button class="chip t-work"><i></i>Work</button>
+          <button class="chip t-commute"><i></i>Commute</button>
+          <button class="chip t-breakfast"><i></i>Breakfast</button>
+          <button class="chip t-lunch"><i></i>Lunch</button>
+          <button class="chip t-sleep"><i></i>Sleep</button>
+          <button class="chip t-reading"><i></i>Reading</button>
+          <button class="chip t-exercise"><i></i>Exercise</button>
+          <button class="chip new"><span class="ms">add</span>New tag</button>
+        </div>
+        <div class="field"><span class="ms">notes</span>Note (optional)</div>
+        <button class="btn tonal"><span class="ms">add_circle</span>Insert a point in the middle</button>
+        <button class="btn danger"><span class="ms">delete</span>Delete start point</button>
+        <div style="height:34px"></div>
+      </div>
+    </div></div>
+    <div class="callouts">
+      <p><b>1</b>Times are 68&nbsp;px tonal buttons, the largest targets in the sheet, because adjusting a boundary is the second most common fix after tagging. For the current block the end reads <i>now</i>.</p>
+      <p><b>2</b>Tag chips reuse the card tones, so the tap preview matches the result. One tap applies and closes; destructive action is outlined in error, last.</p>
+      <p><b>!</b><span class="err" style="color:#BA1A1A"><span class="ms">error</span>Outside the neighbouring points</span></p>
+    </div>
+  </div>
+
+  <!-- 4. Settings -->
+  <div class="fw">
+    <h2>Settings <span>Light</span></h2>
+    <div class="phone light"><div class="screen">
+      <div class="status"><span class="tab">14:44</span><span><span class="ms f">signal_cellular_4_bar</span><span class="ms f">wifi</span><span class="ms f">battery_5_bar</span></span></div>
+      <div class="topbar"><button class="ib" aria-label="Back"><span class="ms">arrow_back</span></button><h4>Settings</h4></div>
+      <div class="set">
+        <div class="sec">Tags</div>
+        <div class="group">
+          <div class="item t-work"><span class="sw36"><i></i></span><span class="nm">Work</span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+          <div class="item t-commute"><span class="sw36"><i></i></span><span class="nm">Commute</span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+          <div class="item t-breakfast"><span class="sw36"><i></i></span><span class="nm">Breakfast</span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+          <div class="item t-lunch"><span class="sw36"><i></i></span><span class="nm">Lunch</span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+          <div class="item t-sleep"><span class="sw36"><i></i></span><span class="nm">Sleep</span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+          <div class="item t-reading"><span class="sw36"><i></i></span><span class="nm">Reading</span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+          <div class="item t-exercise"><span class="sw36"><i></i></span><span class="nm">Exercise</span><button class="tb">Rename</button><button class="tb del">Delete</button></div>
+        </div>
+        <div class="sec" style="margin-top:26px">Data</div>
+        <button class="btn filled"><span class="ms">download</span>Export CSV</button>
+        <p class="help">Every point and label, one row per block.</p>
+      </div>
+      <div class="gesture"><i></i></div>
+    </div></div>
+    <div class="callouts">
+      <p><b>1</b>M3 Expressive grouped list: one container, 3&nbsp;px seams, 24&nbsp;px outer corners. Each tag shows its rail dot inside its own container tone.</p>
+      <p><b>2</b>Export CSV is the only filled button in the app besides Mark, so it reads as the one thing to do here.</p>
+    </div>
+  </div>
+
+  <!-- 5. Capture confirm overlay -->
+  <div class="fw">
+    <h2>Capture confirm <span>Overlay · 2 s</span></h2>
+    <div class="phone light"><div class="screen">
+      <div class="status" style="color:#E4E1E9"><span class="tab">14:32</span><span><span class="ms f">signal_cellular_4_bar</span><span class="ms f">wifi</span><span class="ms f">battery_5_bar</span></span></div>
+      <header class="appbar">
+        <button class="ib"><span class="ms">chevron_left</span></button>
+        <button class="daytitle">Today · Oct 26</button>
+        <button class="ib"><span class="ms">chevron_right</span></button>
+        <span class="sp"></span>
+        <button class="ib gear"><span class="ms">settings</span></button>
+      </header>
+      <main class="tl"><div class="rows"></div><button class="fab"><i class="mk"></i>Mark</button></main>
+      <div class="gesture"><i style="background:#E4E1E9"></i></div>
+      <div class="cap">
+        <div class="drop"></div>
+        <div class="big">14:32</div>
+        <div class="rec"><i></i>Recorded</div>
+        <div class="prev">Previous block <b>1h 47m</b></div>
+        <div class="timer"><i></i></div>
+      </div>
+    </div></div>
+    <div class="callouts">
+      <p><b>1</b>The rail drops a dot: the same mark glyph as the timeline, so the side-key press visibly becomes a point. Big tabular time is the confirmation; nothing to decide.</p>
+      <p><b>2</b>A thin draining bar shows the 2&nbsp;s auto-dismiss. Blurred scrim keeps context without competing.</p>
+    </div>
+  </div>
+
+  <!-- 6. Watch -->
+  <div class="fw">
+    <h2>Watch <span>OLED · 1:1</span></h2>
+    <div class="watches">
+      <div class="watch">
+        <div class="wt">14:32</div>
+        <div class="wr"><i></i>Recorded</div>
+        <div class="wp">Previous block <b>1h 47m</b></div>
+      </div>
+      <div class="wcap">Confirm after double-press Home</div>
+      <div class="watch face">
+        <div class="ft tab">15:19</div>
+        <div class="fd">Mon 26</div>
+        <div class="comp"><i></i><span>47m</span></div>
+      </div>
+      <div class="wcap">Watch face · complication: time since last mark</div>
+    </div>
+    <div class="callouts">
+      <p><b>1</b>True black, dark-theme primary (#BAC3FF) and the same "● Recorded" pill. Display time uses the same ROND-100 numerals as the phone overlay.</p>
+      <p><b>2</b>Complication = a mark dot over <i>47m</i>, outlined in primary, with no progress arc, so it is not mistaken for a goal or a stat.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Clone the shared rows into every timeline frame.
+  const tpl = document.getElementById('rows');
+  document.querySelectorAll('.rows').forEach(r => r.appendChild(tpl.content.cloneNode(true)));
+  // Live tick for the current block (starts at 12m 08s).
+  const t0 = Date.now() - (12 * 60 + 8) * 1000;
+  setInterval(() => {
+    const s = Math.floor((Date.now() - t0) / 1000);
+    const txt = Math.floor(s / 60) + 'm ' + String(s % 60).padStart(2, '0') + 's';
+    document.querySelectorAll('span.live').forEach(e => e.textContent = txt);
+  }, 1000);
+</script>
+</body>
+</html>

@@ -24,6 +24,10 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 kotlin {
@@ -40,4 +44,9 @@ dependencies {
     implementation(libs.play.services.wearable)
     implementation(libs.wear.watchface.complications.data.source.ktx)
     implementation(libs.kotlinx.coroutines.play.services)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.compose.ui.test.junit4)
+    debugImplementation(libs.compose.ui.test.manifest)
 }

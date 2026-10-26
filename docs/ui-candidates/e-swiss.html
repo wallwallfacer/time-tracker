@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>E · Swiss — Time Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#E30613;
+  --t-work:#64B5F6; --t-commute:#FFB74D; --t-breakfast:#FFF176; --t-lunch:#81C784;
+  --t-sleep:#9575CD; --t-reading:#4DB6AC; --t-exercise:#F06292;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Inter Tight',system-ui,-apple-system,sans-serif;
+  font-feature-settings:"tnum" 1,"ss01" 1;
+  -webkit-font-smoothing:antialiased;
+  background:#EDEDED;color:#000;
+  padding:56px 48px 96px;
+}
+button,input{font:inherit;color:inherit}
+
+/* ---------- Title block ---------- */
+.intro{max-width:1240px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));column-gap:24px;row-gap:32px;margin-bottom:72px}
+.intro .mast{grid-column:1/-1;display:flex;align-items:flex-end;gap:24px;border-bottom:8px solid #000;padding-bottom:20px}
+.intro .e{width:132px;height:132px;background:var(--red);color:#fff;font-size:112px;font-weight:900;line-height:1;display:grid;place-items:end start;padding:0 0 4px 12px;letter-spacing:-.04em}
+.intro h1{font-size:132px;line-height:.78;font-weight:900;letter-spacing:-.055em}
+.intro .concept{grid-column:1/-1;font-size:26px;line-height:1.2;font-weight:500;letter-spacing:-.01em;max-width:880px}
+.intro .concept b{font-weight:900}
+.col h2{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;border-top:4px solid #000;padding-top:10px;margin-bottom:14px}
+.col ol{list-style:none;counter-reset:p}
+.col li{counter-increment:p;display:grid;grid-template-columns:32px 1fr;font-size:15px;line-height:1.35;padding:8px 0;border-bottom:1px solid #BDBDBD}
+.col li::before{content:counter(p,decimal-leading-zero);font-weight:900}
+.col li b{font-weight:800}
+.sw{display:grid;grid-template-columns:48px 1fr;align-items:center;gap:12px;font-size:13px;padding:6px 0;border-bottom:1px solid #BDBDBD}
+.sw i{width:48px;height:32px;display:block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+.sw b{font-weight:800}
+.tagbars{display:flex;gap:6px;margin-top:12px;align-items:flex-end}
+.tagbars i{width:6px;height:40px;display:block}
+.tagbars span{font-size:12px;color:#4A4A4A;margin-left:8px}
+.spec div{border-bottom:1px solid #BDBDBD;padding:6px 0 8px}
+.spec small{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;color:#4A4A4A;text-transform:uppercase;margin-bottom:4px}
+.spec .s1{font-size:64px;font-weight:900;letter-spacing:-.05em;line-height:.9}
+.spec .s1 span{font-weight:300}
+.spec .s2{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.spec .s3{font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.spec .s4{font-size:14px}
+
+/* ---------- Frames row ---------- */
+.frames{display:flex;flex-wrap:wrap;gap:72px 48px;align-items:flex-start}
+.frame{width:360px}
+.frame.wide{width:460px}
+.cap{margin-top:28px;border-top:4px solid #000;padding-top:10px;font-size:13px;line-height:1.4}
+.cap b{display:block;font-size:11px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+.cap b em{font-style:normal;color:var(--red)}
+.cap p+p{margin-top:6px}
+
+/* ---------- Phone shell ---------- */
+.phone{
+  --bg:#fff;--ink:#000;--mute:#5C5C5C;--hair:#CFCFCF;
+  position:relative;width:360px;height:780px;border-radius:36px;overflow:hidden;
+  background:var(--bg);color:var(--ink);box-shadow:0 0 0 7px #161616;
+  display:flex;flex-direction:column;
+}
+.phone.dark{--bg:#000;--ink:#fff;--mute:#A6A6A6;--hair:#3A3A3A}
+.status{flex:none;height:36px;display:flex;justify-content:space-between;align-items:center;padding:6px 24px 0 26px;font-size:13px;font-weight:700}
+.batt{display:inline-flex;align-items:center;gap:6px}
+.batt i{width:22px;height:11px;border:1.5px solid currentColor;position:relative;display:block}
+.batt i::before{content:"";position:absolute;top:1.5px;bottom:1.5px;left:1.5px;width:68%;background:currentColor}
+.batt i::after{content:"";position:absolute;right:-4px;top:2.5px;width:2px;height:3px;background:currentColor}
+.gesture{position:absolute;left:50%;bottom:8px;width:120px;height:4px;margin-left:-60px;background:var(--ink);z-index:5}
+.gesture.w{background:#fff}
+
+/* strict 4-col grid: 22px left gutter (6px tag bar + 16), 16px right */
+.g{padding:0 16px 0 22px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));column-gap:8px}
+.kick{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+
+/* header */
+.nav{display:flex;align-items:center;height:44px}
+.nav .btns{margin-left:auto;display:flex;margin-right:-12px}
+.icon{all:unset;width:44px;height:44px;display:grid;place-items:center;font-size:28px;font-weight:400;line-height:1;cursor:pointer}
+.icon svg{width:22px;height:22px}
+.title{all:unset;display:flex;align-items:baseline;gap:10px;font-size:56px;line-height:.92;letter-spacing:-.05em;font-weight:900;padding:2px 0 14px;cursor:pointer}
+.title span{font-weight:300}
+.heavy{height:4px;background:var(--ink);margin:0 16px 0 22px}
+.cols{height:28px;align-items:center;border-bottom:1px solid var(--ink)}
+.cols span{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.cols .r{grid-column:4;text-align:right}
+
+/* rows */
+.row{position:relative;height:54px;align-items:center;border-bottom:1px solid var(--hair)}
+.row::before{content:"";position:absolute;left:-22px;top:0;bottom:-1px;width:6px;background:var(--c)}
+.row.un::before{background:none;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.t{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.tag{grid-column:2/4;display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;min-width:0}
+.tag i{flex:none;width:10px;height:10px;background:var(--c)}
+.tag.none{font-weight:400;letter-spacing:0;text-transform:none;color:var(--mute);font-size:15px}
+.tag.none b{color:var(--ink);font-weight:800;font-size:18px}
+.d{text-align:right;font-size:17px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+
+/* current block */
+.row.now{height:78px;margin:0 -16px 0 -22px;padding:0 16px 0 22px;background:var(--red);color:#fff;border:0}
+.row.now::before{left:0;background:none;box-shadow:inset 0 0 0 1.5px #fff}
+.now .tag{flex-direction:column;align-items:flex-start;gap:4px;color:#fff}
+.now .tag .l1{font-size:15px;font-weight:400;letter-spacing:0;text-transform:none}
+.now .tag .l1 b{font-weight:800;font-size:18px;margin-right:8px}
+.now .tag .l2{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.12em}
+.now .tag .l2 i{background:#fff;width:8px;height:8px;animation:blink 1s steps(2,jump-none) infinite}
+.now .tag .l2 span{text-transform:none;letter-spacing:.02em}
+.now .d{font-size:26px;font-weight:900;letter-spacing:-.03em}
+@keyframes blink{50%{opacity:0}}
+
+.fill{flex:1}
+
+/* Mark */
+.mark{all:unset;box-sizing:border-box;flex:none;position:relative;height:108px;width:100%;background:var(--red);color:#fff;padding:22px 16px 0 22px;display:flex;align-items:flex-start;justify-content:space-between;cursor:pointer}
+.mark span{font-size:36px;font-weight:900;letter-spacing:.03em;line-height:1}
+.mark span em{font-style:normal;font-size:26px;vertical-align:4px;margin-right:6px}
+.mark:active{background:#B8000F}
+
+/* snackbar */
+.snack{flex:none;height:52px;align-items:center;background:var(--ink);color:var(--bg);font-size:15px;font-weight:500}
+.snack span{grid-column:1/4}
+.snack b{text-align:right;font-weight:900;font-size:14px;letter-spacing:.12em;text-transform:uppercase;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:2px}
+
+/* ---------- Label sheet ---------- */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.62);z-index:3}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:4;background:var(--bg);border-top:8px solid var(--ink);padding:16px 16px 34px 22px;animation:rise .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{transform:translateY(40px);opacity:.4}}
+.times{display:flex;align-items:baseline;gap:10px;margin-top:8px;font-size:48px;font-weight:900;letter-spacing:-.045em;line-height:1}
+.times button{all:unset;cursor:pointer;border-bottom:4px solid var(--ink);padding-bottom:3px}
+.times .arr{font-weight:300;letter-spacing:0}
+.sub{margin-top:10px;font-size:14px;color:var(--mute)}
+.sub b{color:var(--ink);font-weight:800}
+.chips{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--ink);border:2px solid var(--ink)}
+.chip{all:unset;position:relative;height:48px;background:var(--bg);display:flex;align-items:center;padding-left:20px;font-size:14px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;cursor:pointer}
+.chip::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--c)}
+.chip.new{text-transform:none;letter-spacing:0;font-size:15px}
+.chip.new::before{display:none}
+.chip:active{background:var(--ink);color:var(--bg)}
+.note{display:block;margin-top:18px}
+.note input{all:unset;box-sizing:border-box;width:100%;height:44px;border-bottom:2px solid var(--ink);font-size:16px}
+.note input::placeholder{color:var(--mute)}
+.acts{margin-top:14px;border-top:4px solid var(--ink)}
+.act{all:unset;box-sizing:border-box;width:100%;height:50px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--hair);font-size:16px;font-weight:700;cursor:pointer}
+.act i{font-style:normal;font-weight:400;font-size:20px}
+
+/* ---------- Settings ---------- */
+.trow{position:relative;height:52px;align-items:center;border-bottom:1px solid var(--hair)}
+.trow .n{grid-column:1/3;display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;letter-spacing:-.01em}
+.trow .n i{width:14px;height:14px;background:var(--c);flex:none}
+.trow button{all:unset;text-align:right;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1.5px}
+.trow button.x{text-decoration:none}
+.trow button.x span{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1.5px}
+.export{all:unset;box-sizing:border-box;flex:none;position:relative;width:100%;height:108px;background:var(--ink);color:var(--bg);padding:22px 16px 0 22px;display:flex;justify-content:space-between;cursor:pointer}
+.export span{font-size:32px;font-weight:900;letter-spacing:-.02em;line-height:1}
+.export i{font-style:normal;font-size:32px;font-weight:300;line-height:1}
+
+/* ---------- Capture overlay ---------- */
+.capture{position:absolute;inset:0;z-index:4;background:rgba(0,0,0,.93);color:#fff;padding:0 16px 0 22px;display:flex;flex-direction:column;justify-content:center}
+.rec{align-self:flex-start;background:var(--red);color:#fff;font-size:16px;font-weight:800;letter-spacing:.02em;padding:7px 12px 7px 10px}
+.big{font-size:118px;font-weight:900;letter-spacing:-.06em;line-height:.85;margin:18px 0 18px -4px}
+.capture .heavy{margin:0;background:#fff}
+.prev{display:flex;justify-content:space-between;align-items:baseline;padding-top:12px}
+.prev span{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#BDBDBD}
+.prev b{font-size:36px;font-weight:800;letter-spacing:-.03em}
+.timer{position:absolute;left:0;bottom:0;height:6px;background:var(--red);animation:drain 2s linear infinite}
+@keyframes drain{from{width:100%}to{width:0}}
+
+/* ---------- Empty ---------- */
+.empty{padding-top:28px}
+.empty p{font-size:27px;font-weight:800;line-height:1.08;letter-spacing:-.025em}
+.empty p q{quotes:"\201C" "\201D"}
+.empty .down{font-size:72px;font-weight:300;line-height:1;margin-top:20px}
+
+/* ---------- Watch ---------- */
+.watches{display:flex;gap:44px;padding:16px 10px 0}
+.watch{position:relative;width:200px;height:200px;border-radius:50%;overflow:hidden;background:#000;color:#fff;box-shadow:0 0 0 8px #262626,0 0 0 9px #000;flex:none}
+.watch .band{position:absolute;left:0;right:0;top:40px;height:26px;background:var(--red);font-size:13px;font-weight:800;letter-spacing:.04em;padding-left:38px;display:flex;align-items:center}
+.watch .wt{position:absolute;left:34px;top:70px;font-size:58px;font-weight:900;letter-spacing:-.06em;line-height:1}
+.watch .wr{position:absolute;left:38px;right:30px;top:134px;border-top:2px solid #fff;padding-top:5px}
+.watch .wr span{display:block;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#BDBDBD}
+.watch .wr b{font-size:17px;font-weight:800;letter-spacing:-.02em}
+.face .day{position:absolute;left:38px;top:44px;font-size:10px;font-weight:800;letter-spacing:.14em;color:#BDBDBD}
+.face .wt{top:58px;font-size:62px}
+.comp{position:absolute;left:38px;top:132px;height:34px;padding:0 10px 0 8px;background:var(--red);display:flex;align-items:center;gap:6px;font-size:19px;font-weight:900;letter-spacing:-.02em}
+.comp i{width:7px;height:7px;background:#fff;animation:blink 1s steps(2,jump-none) infinite}
+.wcap{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-top:18px;text-align:center}
+
+@media (max-width:720px){
+  body{padding:32px 16px 64px}
+  .intro{grid-template-columns:1fr}
+  .intro h1{font-size:84px}
+  .intro .e{width:84px;height:84px;font-size:72px}
+  .frame,.frame.wide{width:100%;max-width:360px}
+  .watches{flex-direction:column;align-items:center}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ======================= TITLE BLOCK ======================= -->
+<header class="intro">
+  <div class="mast">
+    <div class="e">E</div>
+    <h1>Swiss</h1>
+  </div>
+  <p class="concept">The day as a <b>railway timetable</b>: departures on a strict four-column grid, black on white, and one signal color — <b>red means now</b>.</p>
+
+  <section class="col">
+    <h2>Principles</h2>
+    <ol>
+      <li><span><b>One grid.</b> Four columns, 22/16px gutters. Start · Tag · Tag · Duration. Nothing floats.</span></li>
+      <li><span><b>Type is the interface.</b> 56px day title, 22px times, tabular figures everywhere.</span></li>
+      <li><span><b>Red = time.</b> Only Mark, the live block and capture are red. Nothing else may use it.</span></li>
+      <li><span><b>Color is a bar, not a fill.</b> Tag hue lives in a 6px edge bar + square bullet; the name carries meaning.</span></li>
+      <li><span><b>Rules, not cards.</b> 4px rules open sections, hairlines separate rows. No radii, no shadows.</span></li>
+    </ol>
+  </section>
+
+  <section class="col">
+    <h2>Palette</h2>
+    <div class="sw"><i style="background:#000"></i><span><b>Ink</b> #000 · text, rules</span></div>
+    <div class="sw"><i style="background:#fff"></i><span><b>Paper</b> #FFF · dark: #000</span></div>
+    <div class="sw"><i style="background:#E30613"></i><span><b>Signal</b> #E30613 · white on it 4.9:1</span></div>
+    <div class="sw"><i style="background:#5C5C5C"></i><span><b>Mute</b> #5C5C5C · 6.7:1 · dark #A6A6A6</span></div>
+    <div class="sw"><i style="background:#CFCFCF"></i><span><b>Hairline</b> #CFCFCF · dark #3A3A3A</span></div>
+    <div class="tagbars">
+      <i style="background:#64B5F6"></i><i style="background:#FFB74D"></i><i style="background:#FFF176;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)"></i><i style="background:#81C784"></i><i style="background:#9575CD"></i><i style="background:#4DB6AC"></i><i style="background:#F06292"></i><i style="background:#E57373"></i>
+      <span>Tag palette, bars only</span>
+    </div>
+  </section>
+
+  <section class="col spec" style="grid-column:span 2">
+    <h2 style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;border-top:4px solid #000;padding-top:10px;margin-bottom:6px">Type · Inter Tight</h2>
+    <div><small>Day title · 56/900 + 300 · −5%</small><div class="s1">Today <span>26.10</span></div></div>
+    <div><small>Times &amp; durations · 22–28/800 · tnum</small><div class="s2">08:35&ensp;3h 10m&ensp;12:45 → 14:32</div></div>
+    <div><small>Tags · 14/800 · caps +7%</small><div class="s3">Work&ensp;Commute&ensp;Breakfast&ensp;Lunch</div></div>
+    <div><small>Body · 14–16/400</small><div class="s4">1h 47m · tap a time to change it</div></div>
+  </section>
+</header>
+
+<!-- ======================= TEMPLATES ======================= -->
+<template id="head">
+  <div class="status"><span>14:44</span><span class="batt">82% <i></i></span></div>
+  <div class="g">
+    <div class="nav">
+      <span class="kick">Monday</span>
+      <div class="btns">
+        <button class="icon" aria-label="Previous day">‹</button>
+        <button class="icon" aria-label="Next day">›</button>
+        <button class="icon" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button>
+      </div>
+    </div>
+    <button class="title" aria-label="Today · Oct 26 — jump to today">Today <span>26.10</span></button>
+  </div>
+  <div class="heavy"></div>
+  <div class="g"><div class="grid4 cols"><span>Start</span><span>Tag</span><span class="r">Duration</span></div></div>
+</template>
+
+<template id="rows">
+  <div class="g">
+    <div class="grid4 row" style="--c:var(--t-breakfast)"><span class="t">07:10</span><span class="tag"><i></i>Breakfast</span><span class="d">35m</span></div>
+    <div class="grid4 row" style="--c:var(--t-commute)"><span class="t">07:45</span><span class="tag"><i></i>Commute</span><span class="d">50m</span></div>
+    <div class="grid4 row" style="--c:var(--t-work)"><span class="t">08:35</span><span class="tag"><i></i>Work</span><span class="d">3h 10m</span></div>
+    <div class="grid4 row un"><span class="t">11:45</span><span class="tag none"><b>—</b>Unlabeled</span><span class="d">12s</span></div>
+    <div class="grid4 row" style="--c:var(--t-lunch)"><span class="t">11:45</span><span class="tag"><i></i>Lunch</span><span class="d">1h 0m</span></div>
+    <div class="grid4 row un"><span class="t">12:45</span><span class="tag none"><b>—</b>Unlabeled</span><span class="d">1h 47m</span></div>
+    <div class="grid4 row now">
+      <span class="t">14:32</span>
+      <span class="tag"><span class="l1"><b>—</b>Unlabeled</span><span class="l2"><i></i>In progress · <span class="tickm">12m</span></span></span>
+      <span class="d tick">12:07</span>
+    </div>
+  </div>
+</template>
+
+<template id="mark">
+  <div class="fill"></div>
+  <button class="mark" aria-label="Mark"><span><em>●</em>MARK</span></button>
+  <div class="gesture w"></div>
+</template>
+
+<main class="frames">
+
+  <!-- 01 Timeline light -->
+  <figure class="frame">
+    <div class="phone"><slot-t t="head"></slot-t><slot-t t="rows"></slot-t><slot-t t="mark"></slot-t></div>
+    <figcaption class="cap">
+      <b>01 · Timeline · Light</b>
+      <p>Read across like a departure board: start, tag, duration. Durations hug the right edge of column 4 so the eye scans one vertical line of numbers.</p>
+      <p><code>Today · Oct 26</code> is set as <b style="display:inline;font-size:inherit;letter-spacing:0;text-transform:none">Today 26.10</b> — the whole title is one tap target back to today.</p>
+    </figcaption>
+  </figure>
+
+  <!-- 02 Timeline dark + undo -->
+  <figure class="frame">
+    <div class="phone dark"><slot-t t="head"></slot-t><slot-t t="rows"></slot-t>
+      <div class="fill"></div>
+      <div class="g grid4 snack"><span>Point deleted</span><b>Undo</b></div>
+      <button class="mark" aria-label="Mark"><span><em>●</em>MARK</span></button>
+      <div class="gesture w"></div>
+    </div>
+    <figcaption class="cap">
+      <b>02 · Timeline · Dark · <em>Undo state</em></b>
+      <p>True black #000 for OLED, white type, the same red. The live block is the only red row; its clock ticks mm:ss like a station clock.</p>
+      <p>Snackbar inverts to a solid white bar docked on Mark — the one light block on screen, impossible to miss.</p>
+    </figcaption>
+  </figure>
+
+  <!-- 03 Label sheet -->
+  <figure class="frame">
+    <div class="phone"><slot-t t="head"></slot-t><slot-t t="rows"></slot-t><slot-t t="mark"></slot-t>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="kick">Label block</div>
+        <div class="times"><button aria-label="Change start time">12:45</button><span class="arr">→</span><button aria-label="Change end time">14:32</button></div>
+        <p class="sub"><b>1h 47m</b> · tap a time to change it</p>
+        <div class="chips">
+          <button class="chip" style="--c:var(--t-work)">Work</button>
+          <button class="chip" style="--c:var(--t-commute)">Commute</button>
+          <button class="chip" style="--c:var(--t-breakfast)">Breakfast</button>
+          <button class="chip" style="--c:var(--t-lunch)">Lunch</button>
+          <button class="chip" style="--c:var(--t-sleep)">Sleep</button>
+          <button class="chip" style="--c:var(--t-reading)">Reading</button>
+          <button class="chip" style="--c:var(--t-exercise)">Exercise</button>
+          <button class="chip new">+ New tag</button>
+        </div>
+        <label class="note"><input type="text" placeholder="Note (optional)" aria-label="Note (optional)"></label>
+        <div class="acts">
+          <button class="act">Insert a point in the middle <i>+</i></button>
+          <button class="act">Delete start point <i>✕</i></button>
+        </div>
+      </div>
+      <div class="gesture"></div>
+    </div>
+    <figcaption class="cap">
+      <b>03 · Label sheet</b>
+      <p>Hard-edged panel, 8px top rule instead of a grabber. Tags are a 2-col grid of rectangular buttons in last-used order; the color bar repeats the timeline's edge bar.</p>
+      <p>Times are underlined like links — tappable. For the live block the end reads <code>now</code>. Error state: <code>Outside the neighbouring points</code> replaces the sub-line in black, bold.</p>
+    </figcaption>
+  </figure>
+
+  <!-- 04 Settings -->
+  <figure class="frame">
+    <div class="phone">
+      <div class="status"><span>14:44</span><span class="batt">82% <i></i></span></div>
+      <div class="g">
+        <div class="nav"><button class="icon" aria-label="Back" style="margin-left:-12px">←</button></div>
+        <h2 class="title" style="cursor:default">Settings</h2>
+      </div>
+      <div class="heavy"></div>
+      <div class="g">
+        <div class="grid4 cols"><span>Tags</span><span></span><span></span><span class="r">7</span></div>
+        <div class="grid4 trow" style="--c:var(--t-work)"><span class="n"><i></i>Work</span><button>Rename</button><button class="x">✕ <span>Delete</span></button></div>
+        <div class="grid4 trow" style="--c:var(--t-commute)"><span class="n"><i></i>Commute</span><button>Rename</button><button class="x">✕ <span>Delete</span></button></div>
+        <div class="grid4 trow" style="--c:var(--t-breakfast)"><span class="n"><i></i>Breakfast</span><button>Rename</button><button class="x">✕ <span>Delete</span></button></div>
+        <div class="grid4 trow" style="--c:var(--t-lunch)"><span class="n"><i></i>Lunch</span><button>Rename</button><button class="x">✕ <span>Delete</span></button></div>
+        <div class="grid4 trow" style="--c:var(--t-sleep)"><span class="n"><i></i>Sleep</span><button>Rename</button><button class="x">✕ <span>Delete</span></button></div>
+        <div class="grid4 trow" style="--c:var(--t-reading)"><span class="n"><i></i>Reading</span><button>Rename</button><button class="x">✕ <span>Delete</span></button></div>
+        <div class="grid4 trow" style="--c:var(--t-exercise)"><span class="n"><i></i>Exercise</span><button>Rename</button><button class="x">✕ <span>Delete</span></button></div>
+      </div>
+      <div class="fill"></div>
+      <button class="export"><span>Export CSV</span><i>↓</i></button>
+      <div class="gesture w"></div>
+    </div>
+    <figcaption class="cap">
+      <b>04 · Settings</b>
+      <p>Same masthead as the timeline, so screens feel like pages of one timetable. Rename / Delete sit in columns 3–4, aligned down the list.</p>
+      <p>Export CSV mirrors Mark's full-width bottom bar but in black: primary, not urgent. Red stays reserved for time.</p>
+    </figcaption>
+  </figure>
+
+  <!-- 05 Capture overlay -->
+  <figure class="frame">
+    <div class="phone"><slot-t t="head"></slot-t><slot-t t="rows"></slot-t><slot-t t="mark"></slot-t>
+      <div class="capture">
+        <span class="rec">● Recorded</span>
+        <div class="big">14:32</div>
+        <div class="heavy"></div>
+        <div class="prev"><span>Previous block</span><b>1h 47m</b></div>
+        <div class="timer"></div>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <b>05 · Capture confirm · side key</b>
+      <p>118px time, flush left, readable at arm's length without unlocking focus. Red tag = the stamp; white rule separates new point from previous block.</p>
+      <p>A 6px red bar drains along the bottom edge over 2 s — the auto-dismiss made visible.</p>
+    </figcaption>
+  </figure>
+
+  <!-- 06 Empty state -->
+  <figure class="frame">
+    <div class="phone"><slot-t t="head"></slot-t>
+      <div class="g empty">
+        <p>Press Mark, or bind the side button's double press to <q>Mark</q>.</p>
+        <div class="down">↓</div>
+      </div>
+      <slot-t t="mark"></slot-t>
+    </div>
+    <figcaption class="cap">
+      <b>06 · Empty state · optional</b>
+      <p>The column heads stay, the timetable is simply blank. The instruction is set as a headline in columns 1–4 and points straight down at Mark.</p>
+    </figcaption>
+  </figure>
+
+  <!-- 07 Watch -->
+  <figure class="frame wide">
+    <div class="watches">
+      <div>
+        <div class="watch">
+          <div class="band">● Recorded</div>
+          <div class="wt">14:32</div>
+          <div class="wr"><span>Previous block</span><b>1h 47m</b></div>
+        </div>
+        <div class="wcap">Confirm</div>
+      </div>
+      <div>
+        <div class="watch face">
+          <div class="day">MON 26.10</div>
+          <div class="wt">15:19</div>
+          <div class="comp"><i></i>47m</div>
+        </div>
+        <div class="wcap">Face · complication</div>
+      </div>
+    </div>
+    <figcaption class="cap">
+      <b>07 · Galaxy Watch · OLED black</b>
+      <p>A full-bleed red band reads "● Recorded" at a glance; the round bezel crops it, the type stays on the flush-left grid inside the inscribed square.</p>
+      <p>Complication: a hard red block with a blinking square, <code>47m</code> since the last mark (face shows 15:19 = 14:32 + 47m).</p>
+    </figcaption>
+  </figure>
+
+</main>
+
+<script>
+// Expand shared templates into each frame, then tick the live block (mm:ss).
+document.querySelectorAll('slot-t').forEach(s =>
+  s.replaceWith(document.getElementById(s.getAttribute('t')).content.cloneNode(true)));
+let sec = 12 * 60 + 7;
+setInterval(() => {
+  sec++;
+  const m = Math.floor(sec / 60), ss = String(sec % 60).padStart(2, '0');
+  document.querySelectorAll('.tick').forEach(e => e.textContent = m + ':' + ss);
+  document.querySelectorAll('.tickm').forEach(e => e.textContent = m + 'm');
+}, 1000);
+</script>
+</body>
+</html>

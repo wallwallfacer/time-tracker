@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -84,6 +85,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Transparent system bars that follow the app's light/dark surface; every screen pads itself via Scaffold.
+        enableEdgeToEdge()
         setContent {
             TimeTrackerTheme {
                 var screen by rememberSaveable { mutableStateOf("timeline") }

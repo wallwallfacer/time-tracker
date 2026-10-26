@@ -21,6 +21,13 @@ class FormatTest {
         assertEquals("59m", formatDuration(3_599_999))
     }
 
+    @Test fun `elapsed adds padded seconds past a minute`() {
+        assertEquals("12s", formatElapsed(12_000))
+        assertEquals("12m 08s", formatElapsed(728_999))
+        assertEquals("1h 5m 03s", formatElapsed(3_903_000))
+        assertEquals("0s", formatElapsed(-1))
+    }
+
     @Test fun `formatTime uses zone`() {
         // 2026-10-25T06:32:00Z is 14:32 in Singapore (UTC+8)
         assertEquals("14:32", formatTime(1_792_909_920_000L, ZoneId.of("Asia/Singapore")))
