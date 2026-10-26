@@ -4,10 +4,12 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Icon
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationText
 import androidx.wear.watchface.complications.data.ComplicationType
 import androidx.wear.watchface.complications.data.CountUpTimeReference
+import androidx.wear.watchface.complications.data.MonochromaticImage
 import androidx.wear.watchface.complications.data.PlainComplicationText
 import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import androidx.wear.watchface.complications.data.TimeDifferenceComplicationText
@@ -47,7 +49,9 @@ class ElapsedComplicationService : SuspendingComplicationDataSourceService() {
         return ShortTextComplicationData.Builder(
             text,
             PlainComplicationText.Builder(getString(R.string.complication_description)).build(),
-        ).setTapAction(tap).build()
+        ).setTapAction(tap)
+            .setMonochromaticImage(MonochromaticImage.Builder(Icon.createWithResource(this, R.drawable.ic_mark_dot)).build())
+            .build()
     }
 }
 

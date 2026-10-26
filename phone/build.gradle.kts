@@ -53,4 +53,8 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.compose.ui.test.junit4)
+    // Robolectric reads the merged debug manifest, which must declare the compose test activity;
+    // so the render tests live in src/testDebug and release builds never carry it.
+    debugImplementation(libs.compose.ui.test.manifest)
 }
