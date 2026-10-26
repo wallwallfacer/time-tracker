@@ -121,7 +121,7 @@ every edit a plain row operation:
 | Mark a point | insert | new block is unlabeled |
 | Label a block | update `tagId` on its start point | — |
 | Delete a point | delete row | the two neighbours merge; the earlier point's label survives |
-| Move a point | update `at` | label travels with the point; constrained to stay strictly between its neighbours |
+| Move a point | update `at` | label travels with the point; constrained to stay between its neighbours (non-strict: `prev.at <= at <= next.at`); a picked time that fits no adjacent date is rejected with a message, never clamped |
 | Insert a point inside a block | insert with `at` chosen by owner | the new point is unlabeled; the first half keeps the old label. Same rule as a late-arriving watch point, so there is one insert path |
 
 Idempotency: insert ignores a duplicate `id`. The watch may deliver the same
@@ -179,8 +179,10 @@ Confirm screen (non-interactive):
       └─────────────┘
 ```
 
-`latestKnownPointAt` = max(own last mark, `/latest` from phone), kept in a
-single DataStore preference. If no previous point is known, omit the third line.
+`latestKnownPointAt` = the most recent write of either the watch's own
+successful mark or `/latest` from the phone (each overwrites; the phone is
+authoritative, so deleting an accidental press stops the watch counting from
+it), kept in a single DataStore preference. If no previous point is known, omit the third line.
 
 Nothing else exists on the watch. No list, no labels, no settings.
 
@@ -241,8 +243,8 @@ extra tap. The owner accepts the fallback; the alias path is preferred.
 - Tapping a tag applies it immediately and closes the sheet. No confirm button.
 - Chips ordered by `lastUsedAt` descending. "+ 新标签" asks for a name and
   applies the new tag at once.
-- Tapping a boundary time opens the system time picker, limited to strictly
-  between the neighbouring points; the end time edits the *next* point.
+- Tapping a boundary time opens the system time picker, limited to between the neighbouring points (non-strict); a time that
+  fits no adjacent date is rejected with a message; the end time edits the *next* point.
 - "Insert a point" inserts at the block's midpoint and immediately opens the
   time picker on it.
 - Note is saved on focus loss or sheet close.
@@ -262,7 +264,8 @@ start_iso,end_iso,duration_sec,tag,note,source
 **Sync receiver:** a `WearableListenerService` (runs without the app open).
 On each `/point/*` DataItem: insert into Room (idempotent), delete the
 DataItem only if the insert succeeded (a failed insert leaves the item in
-place so it is redelivered), then write `/latest` with the newest `at` in the
+place; the Data Layer does not redeliver it, so leftover `/point/*` items are
+consumed by a sweep whenever the phone app comes to the foreground), then write `/latest` with the newest `at` in the
 database. `/latest`
 is also rewritten after any phone-side insert, delete, or move that changes
 the newest point.
