@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Mark" alias icon: the Mark button's ringed dot, centred. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="#2400105C" android:pathData="M54,32a22,22 0 1,1 0,44a22,22 0 1,1 0,-44z" />
+    <path android:fillColor="#FF00105C" android:pathData="M54,40a14,14 0 1,1 0,28a14,14 0 1,1 0,-28z" />
+</vector>

@@ -24,6 +24,7 @@ import dev.timetracker.core.Source
 import dev.timetracker.core.Tag
 import dev.timetracker.core.clipToDay
 import dev.timetracker.core.deriveBlocks
+import dev.timetracker.phone.R
 import dev.timetracker.phone.capture.ConfirmOverlay
 import dev.timetracker.phone.capture.OverlayState
 import dev.timetracker.phone.data.AppDatabase
@@ -129,6 +130,23 @@ class RenderScreensTest {
         Box(Modifier.fillMaxSize()) {
             timeline()()
             ConfirmOverlay(OverlayState("14:32", "1h 47m"))
+        }
+    }
+
+    /** Draws each launcher icon through AdaptiveIconDrawable, so the system mask and safe zone are real. */
+    @Test fun launcherIcons() {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val size = 432
+        val sheet = Bitmap.createBitmap(size * 2 + 48, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(sheet)
+        listOf(R.mipmap.ic_launcher, R.mipmap.ic_launcher_mark).forEachIndexed { i, id ->
+            context.getDrawable(id)!!.apply {
+                setBounds(i * (size + 48), 0, i * (size + 48) + size, size)
+                draw(canvas)
+            }
+        }
+        File("build/renders").apply { mkdirs() }.resolve("07-launcher-icons.png").outputStream().use {
+            sheet.compress(Bitmap.CompressFormat.PNG, 100, it)
         }
     }
 
