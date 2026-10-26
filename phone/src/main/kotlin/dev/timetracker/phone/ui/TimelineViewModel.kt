@@ -68,12 +68,13 @@ class TimelineViewModel(
         }
     }
 
-    /** Re-inserts [p] under its original id, so a redelivered watch point cannot duplicate it. */
+    /**
+     * Re-inserts [p] under its original id, so a redelivered watch point cannot duplicate it. One write, so the
+     * timeline never shows a half-restored point (tag back, note not yet).
+     */
     fun undoDelete(p: Point) {
         viewModelScope.launch {
-            repo.mark(p.source, p.at, p.id)
-            p.tagId?.let { repo.setTag(p.id, it) }
-            p.note?.let { repo.setNote(p.id, it) }
+            repo.restore(p)
             publisher.publish(repo.newestAt())
         }
     }

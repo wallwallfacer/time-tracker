@@ -28,6 +28,9 @@ class PointRepository(private val db: AppDatabase, val clock: () -> Long = Syste
     suspend fun mark(source: Source, at: Long = clock(), id: String = UUID.randomUUID().toString()): Boolean =
         pointDao.insertIgnore(Point(id, at, source, createdAt = clock()).toEntity()) != -1L
 
+    /** Re-inserts [p] exactly as it was (id, time, source, tag, note) in one write; false if its id already exists. */
+    suspend fun restore(p: Point): Boolean = pointDao.insertIgnore(p.toEntity()) != -1L
+
     suspend fun deletePoint(id: String) = pointDao.delete(id)
     suspend fun movePoint(id: String, at: Long) = pointDao.updateAt(id, at)
 
