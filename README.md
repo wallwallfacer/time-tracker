@@ -38,26 +38,15 @@ Output APKs:
 
 Both apps share the `applicationId` `dev.timetracker.app` and must be signed with the same key. Debug builds already are, so no extra setup is needed.
 
-Phone, over USB:
+Both devices can use wireless debugging (Android 11+ / Wear OS 4+). On each device, open Developer options → **Wireless debugging** → pair with a pairing code, then on the Mac:
 
 ```bash
-adb install -r phone/build/outputs/apk/debug/phone-debug.apk
+adb pair <device-ip>:<pairing-port> <code>
+adb connect <device-ip>:<connect-port>
+adb -s <device-ip>:<connect-port> install -r phone/build/outputs/apk/debug/phone-debug.apk
 ```
 
-Watch, over Wi-Fi ADB:
-
-1. On the watch, open Settings → Developer options and turn on **ADB debugging** and **Debug over Wi-Fi**.
-2. Connect to the watch by its IP address and port:
-
-   ```bash
-   adb connect <watch-ip>:5555
-   ```
-
-3. Install the watch APK:
-
-   ```bash
-   adb -s <watch-ip>:5555 install -r wear/build/outputs/apk/debug/wear-debug.apk
-   ```
+Install `wear/build/outputs/apk/debug/wear-debug.apk` on the watch the same way. The phone usually reconnects by itself after pairing. The watch's connect port changes whenever its Wi-Fi sleeps, so read it again from the watch's Wireless debugging screen. A USB cable works for the phone too: `adb install -r phone/build/outputs/apk/debug/phone-debug.apk`.
 
 ## Bind the keys
 
@@ -69,6 +58,8 @@ Watch, over Wi-Fi ADB:
 - **Time Tracker**, if it does not. This opens the timeline; tap the **● Mark** button at the bottom to record a point.
 
 **Watch face complication.** Long-press the watch face, add a complication, and choose **Time Tracker**. It shows the time since the last mark and refreshes about every 5 minutes. Tapping it records a mark.
+
+**Phone battery (Samsung).** Open the phone app once after installing, then set Settings → Apps → Time Tracker → Battery → **Unrestricted**. A freshly installed app that has not been opened is blocked from running in the background, so watch marks wait on the phone until the app opens. They are not lost: opening the app imports them.
 
 ## Using the phone app
 

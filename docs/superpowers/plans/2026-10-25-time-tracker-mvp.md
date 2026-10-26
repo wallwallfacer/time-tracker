@@ -698,21 +698,27 @@ git commit -m "feat(wear): elapsed-time complication that marks on tap"
 - Create: `README.md` (what it is, build & install commands for both APKs, the two key-binding paths on phone and watch, the CSV columns)
 - Modify: `docs/superpowers/plans/2026-10-25-time-tracker-mvp.md` (tick the checklist below with results)
 
-- [ ] **Step 1: Run the full automated suite** — `./gradlew test` — all green.
+- [x] **Step 1: Run the full automated suite** — `./gradlew test` — all green (core 36, phone 27).
 
-- [ ] **Step 2: Manual end-to-end (spec §8)** — tick each:
-  - [ ] watch double-press with phone connected → row on phone within seconds
-  - [ ] watch in airplane mode, two presses, reconnect → two rows, no duplicate
-  - [ ] phone side-key from lock screen → overlay, vibration, row
-  - [ ] two phone presses within 2 s → two rows
-  - [ ] delete the 0s row → neighbours merge, earlier label kept; Undo restores
-  - [ ] insert a point mid-block → new half unlabeled
-  - [ ] block across midnight shows on both days
-  - [ ] export CSV opens in a spreadsheet with the six columns
+- [x] **Step 2: Manual end-to-end (spec §8)** — verified 2026-10-26 on a Galaxy S25 Ultra (SM-S9380, Android 16, Wear OS China companion 2.68) and a Galaxy Watch8 (SM-L310, Android 16):
+  - [x] watch double-press with phone connected → row on phone within seconds — Home-key and adb-launched marks arrived within seconds once the phone app had been opened and its battery set to Unrestricted
+  - [x] watch in airplane mode, two presses, reconnect → two rows, no duplicate — 10:05:12 and 10:05:28 arrived after reconnect, no duplicates
+  - [x] phone side-key from lock screen → overlay, vibration, row — "Mark" is listed in the side-button picker; overlay shows over the lock screen
+  - [x] two phone presses within 2 s → two rows — two rows on phone and two on watch from presses 1 s apart
+  - [x] delete the 0s row → neighbours merge, earlier label kept; Undo restores — earlier "work" label survived the merge; Undo restored the row
+  - [x] insert a point mid-block → new half unlabeled — MANUAL point at the exact midpoint (05:12:46), unlabeled
+  - [x] block across midnight shows on both days — 00:31 point moved to 23:31 the previous day, not clamped; block shows on both days
+  - [x] export CSV opens in a spreadsheet with the six columns — six columns, +08:00 offsets, empty end on the current block
 
-- [ ] **Step 3: Write README and commit**
+- [x] **Step 3: Write README and commit**
 
 ```bash
 git add README.md docs/superpowers/plans/2026-10-25-time-tracker-mvp.md
 git commit -m "docs: readme and verified end-to-end checklist"
 ```
+
+Device-run notes (2026-10-26):
+- Samsung's background restriction blocked the phone's listener service until the app had been opened and its battery set to Unrestricted. The foreground sweep imported the waiting marks, so nothing was lost. Both changes were made at the same time, so which one is required on its own was not isolated.
+- The first sweep after the restriction was lifted failed once with ApiException 17 (API_UNAVAILABLE) and succeeded on the next onStart.
+- play-services-wearable 18.2 works through the Wear OS China companion on the phone, in both directions.
+- Not run on device: the "next morning shows today" case (covered by TimelineViewModelTest).
