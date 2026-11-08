@@ -115,9 +115,9 @@ class MainActivity : ComponentActivity() {
                 TimelineScreen(
                     state = state,
                     zone = zone,
-                    onPrev = viewModel::previousDay,
-                    onNext = viewModel::nextDay,
-                    onToday = viewModel::today,
+                    onPrev = viewModel::previous,
+                    onNext = viewModel::next,
+                    onToday = viewModel::current,
                     onMark = viewModel::mark,
                     onRowClick = { selectedId = it.start.id },
                     onDeleteRow = ::deleteWithUndo,
