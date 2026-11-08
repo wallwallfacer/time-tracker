@@ -118,6 +118,7 @@ class MainActivity : ComponentActivity() {
                     onPrev = viewModel::previous,
                     onNext = viewModel::next,
                     onToday = viewModel::current,
+                    onMode = viewModel::setMode,
                     onMark = viewModel::mark,
                     onRowClick = { selectedId = it.start.id },
                     onDeleteRow = ::deleteWithUndo,

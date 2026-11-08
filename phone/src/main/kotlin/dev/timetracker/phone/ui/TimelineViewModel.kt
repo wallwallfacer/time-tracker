@@ -54,6 +54,25 @@ data class OverviewState(
     val isEmpty: Boolean,
 )
 
+/** The Week/Month state for [pinned] (null = follow today); [focus] comes back null when it has no time in the period. */
+fun overviewState(
+    points: List<Point>, tags: List<Tag>, mode: ViewMode, pinned: LocalDate?, focus: Focus?, zone: ZoneId, now: Long,
+): OverviewState {
+    val today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate()
+    val anchor = pinned ?: today
+    val o = overview(points, mode, anchor, zone, now)
+    val tagsById = tags.associateBy { it.id }
+    val rows = o.totals.mapNotNull { (id, ms) -> tagsById[id]?.let { TagTotal(it, ms, o.previous?.let { p -> ms - (p[id] ?: 0L) }) } }
+        .sortedWith(compareByDescending<TagTotal> { it.ms }.thenBy { it.tag.name })
+    val present = when (focus) {
+        null -> true
+        Focus.Unlabeled -> (o.totals[null] ?: 0L) > 0
+        is Focus.OnTag -> rows.any { it.tag.id == focus.tagId }
+    }
+    val isCurrent = periodStart(mode, anchor) == periodStart(mode, today)
+    return OverviewState(mode, anchor, isCurrent, o, rows, tagsById, focus.takeIf { present }, points.isEmpty())
+}
+
 class TimelineViewModel(
     private val repo: PointRepository,
     private val publisher: LatestPublisher,
@@ -84,20 +103,10 @@ class TimelineViewModel(
     val overview: StateFlow<OverviewState?> =
         combine(combine(repo.points, repo.tags, ticker, ::Triple), pinned, _mode, focus) { (points, tags, now), pinned, mode, focus ->
             if (mode == ViewMode.DAY) return@combine null
-            val anchor = pinned ?: dateAt(now)
-            val o = overview(points, mode, anchor, zone, now)
-            val tagsById = tags.associateBy { it.id }
-            val rows = o.totals.mapNotNull { (id, ms) -> tagsById[id]?.let { TagTotal(it, ms, o.previous?.let { p -> ms - (p[id] ?: 0L) }) } }
-                .sortedWith(compareByDescending<TagTotal> { it.ms }.thenBy { it.tag.name })
-            val present = when (focus) {
-                null -> true
-                Focus.Unlabeled -> (o.totals[null] ?: 0L) > 0
-                is Focus.OnTag -> rows.any { it.tag.id == focus.tagId }
+            overviewState(points, tags, mode, pinned, focus, zone, now).also {
+                // A focus with no time in this period would have no row and no Clear control: drop it (spec §4.6).
+                if (it.focus != focus) this.focus.value = null
             }
-            // A focus with no time in this period would have no row and no Clear control: drop it (spec §4.6).
-            if (!present) this.focus.value = null
-            val isCurrent = pinned == null || periodStart(mode, pinned) == periodStart(mode, dateAt(now))
-            OverviewState(mode, anchor, isCurrent, o, rows, tagsById, focus.takeIf { present }, points.isEmpty())
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     private fun shownDay(): LocalDate = pinned.value ?: dateAt(clock())
