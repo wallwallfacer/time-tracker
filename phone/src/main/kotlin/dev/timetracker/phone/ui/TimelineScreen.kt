@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FilledTonalIconButton
@@ -29,6 +30,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -44,6 +48,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.timetracker.core.Block
+import dev.timetracker.core.ViewMode
 import dev.timetracker.phone.R
 import java.time.LocalDate
 import java.time.ZoneId
@@ -60,6 +65,7 @@ fun TimelineScreen(
     onPrev: () -> Unit,
     onNext: () -> Unit,
     onToday: () -> Unit,
+    onMode: (ViewMode) -> Unit,
     onMark: () -> Unit,
     onRowClick: (Block) -> Unit,
     onDeleteRow: (Block) -> Unit,
@@ -77,7 +83,10 @@ fun TimelineScreen(
         floatingActionButtonPosition = FabPosition.Center,
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            DayHeader(state.day, zone, onPrev, onNext, onToday, onSettings)
+            val today = LocalDate.now(zone)
+            val title = if (state.day == today) "${stringResource(R.string.today)} · ${state.day.format(SHORT_DAY)}" else state.day.format(OTHER_DAY)
+            PeriodHeader(title, state.day == today, onPrev, onNext, onToday, onSettings)
+            ModeSwitch(ViewMode.DAY, onMode)
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (state.isEmpty) {
                     Text(
@@ -101,6 +110,22 @@ fun TimelineScreen(
                     BottomFade(Modifier.align(Alignment.BottomCenter))
                 }
             }
+        }
+    }
+}
+
+/** Day · Week · Month, directly under the header on all three views. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ModeSwitch(mode: ViewMode, onMode: (ViewMode) -> Unit) {
+    val labels = listOf(R.string.mode_day, R.string.mode_week, R.string.mode_month)
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        ViewMode.entries.forEachIndexed { i, m ->
+            SegmentedButton(
+                selected = m == mode,
+                onClick = { onMode(m) },
+                shape = SegmentedButtonDefaults.itemShape(i, ViewMode.entries.size),
+            ) { Text(stringResource(labels[i])) }
         }
     }
 }
@@ -135,20 +160,25 @@ private fun BottomFade(modifier: Modifier) {
     )
 }
 
+/** ‹ title › and the settings gear. Tapping the title returns to the current day/week/month, marked by a primary dot. */
 @Composable
-private fun DayHeader(day: LocalDate, zone: ZoneId, onPrev: () -> Unit, onNext: () -> Unit, onToday: () -> Unit, onSettings: () -> Unit) {
-    val title = if (day == LocalDate.now(zone)) "${stringResource(R.string.today)} · ${day.format(SHORT_DAY)}" else day.format(OTHER_DAY)
+internal fun PeriodHeader(title: String, isCurrent: Boolean, onPrev: () -> Unit, onNext: () -> Unit, onCurrent: () -> Unit, onSettings: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().height(64.dp).padding(start = 4.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         IconButton(onClick = onPrev) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, null) }
-        Text(
-            title,
-            Modifier.clip(CircleShape).clickable(onClick = onToday).padding(horizontal = 14.dp, vertical = 8.dp),
-            style = MaterialTheme.typography.titleLarge,
-        )
+        Row(
+            Modifier.clip(CircleShape).clickable(onClick = onCurrent).padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (isCurrent) {
+                Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+                Spacer(Modifier.size(7.dp))
+            }
+            Text(title, style = MaterialTheme.typography.titleLarge)
+        }
         IconButton(onClick = onNext) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) }
         Spacer(Modifier.weight(1f))
         FilledTonalIconButton(

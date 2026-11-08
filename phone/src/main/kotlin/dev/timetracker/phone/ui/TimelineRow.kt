@@ -237,15 +237,18 @@ private fun Rail(tag: Color?, compressed: Boolean, current: Boolean, modifier: M
 private fun DrawScope.hatched(left: Float, top: Float, w: Float, h: Float, color: Color) {
     val r = CornerRadius(w / 2)
     val outline = Path().apply { addRoundRect(RoundRect(left, top, left + w, top + h, r)) }
-    clipPath(outline) {
-        val step = 5.dp.toPx()
-        var y = top - w
-        while (y < top + h) {
-            drawLine(color, Offset(left, y + w), Offset(left + w, y), strokeWidth = 2.dp.toPx())
-            y += step
-        }
-    }
+    clipPath(outline) { stripes(left, top, w, h, color) }
     drawRoundRect(color, Offset(left + 0.75.dp.toPx(), top + 0.75.dp.toPx()), Size(w - 1.5.dp.toPx(), h - 1.5.dp.toPx()), r, style = Stroke(1.5.dp.toPx()))
+}
+
+/** The unlabeled hatch: 45° lines every 5dp across `[left, left + w) × [top, top + h)`; callers clip to their shape. */
+internal fun DrawScope.stripes(left: Float, top: Float, w: Float, h: Float, color: Color) {
+    val step = 5.dp.toPx()
+    var y = top - w
+    while (y < top + h) {
+        drawLine(color, Offset(left, y + w), Offset(left + w, y), strokeWidth = 2.dp.toPx())
+        y += step
+    }
 }
 
 /** Broken-axis mark: two short waves across the gap in a compressed segment. */

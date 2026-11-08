@@ -34,4 +34,14 @@
     <string name="delete_tag_confirm">Remove “%1$s” from %2$d blocks?</string>
     <string name="export_done">Exported</string>
     <string name="export_failed">Export failed</string>
+    <string name="mode_day">Day</string>
+    <string name="mode_week">Week</string>
+    <string name="mode_month">Month</string>
+    <string name="labeled_percent">%1$d%% labeled</string>
+    <string name="unlabeled_amount">%1$s unlabeled</string>
+    <string name="label_action">Label</string>
+    <string name="showing_only">Showing %1$s only</string>
+    <string name="clear">Clear</string>
+    <string name="nothing_recorded">Nothing recorded</string>
+    <string name="delta_same">same</string>
 </resources>

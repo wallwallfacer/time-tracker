@@ -22,6 +22,7 @@ import androidx.test.core.app.ApplicationProvider
 import dev.timetracker.core.Point
 import dev.timetracker.core.Source
 import dev.timetracker.core.Tag
+import dev.timetracker.core.ViewMode
 import dev.timetracker.core.clipToDay
 import dev.timetracker.core.deriveBlocks
 import dev.timetracker.phone.R
@@ -93,7 +94,7 @@ class RenderScreensTest {
     }
 
     private fun timeline(snackbar: SnackbarHostState = SnackbarHostState(), state: TimelineState = sampleState()) =
-        @Composable { TimelineScreen(state, zone, {}, {}, {}, {}, {}, {}, {}, snackbar) }
+        @Composable { TimelineScreen(state, zone, {}, {}, {}, {}, {}, {}, {}, {}, snackbar) }
 
     @Test fun timelineLight() = render("01-timeline-light", content = timeline())
 
@@ -151,4 +152,28 @@ class RenderScreensTest {
     }
 
     @Test fun emptyState() = render("06-empty", content = timeline(state = TimelineState(day, emptyList(), isEmpty = true)))
+
+    // ---- Week / Month: three prior weeks of a routine with a few unlabeled evenings, plus today's sample ----
+    private val history: List<Point> = (1..24).flatMap { back ->
+        val start = dayStart - back * 86_400_000L
+        fun at(h: Int, m: Int) = start + (h * 60L + m) * 60_000
+        val weekend = day.minusDays(back.toLong()).dayOfWeek.value >= 6
+        val evening = if (back % 3 == 0 || back < 3) null else if (back % 2 == 0) "exercise" else "reading"
+        if (weekend) listOf(
+            point("b$back", at(9, 0), "breakfast"), point("r$back", at(9, 40), "reading"), point("l$back", at(13, 0), "lunch"),
+            point("e$back", at(14, 0), evening), point("s$back", at(22, 30), "sleep"),
+        ) else listOf(
+            point("b$back", at(7, 10), "breakfast"), point("c$back", at(7, 45), "commute"), point("w$back", at(8, 35), "work"),
+            point("l$back", at(12, 0), "lunch"), point("x$back", at(13, 0), "work"), point("d$back", at(18, 0), "commute"),
+            point("e$back", at(18, 50), evening), point("s$back", at(23, 0), "sleep"),
+        )
+    } + points
+
+    private fun overview(mode: ViewMode, focus: Focus? = null) =
+        @Composable { OverviewScreen(overviewState(history, tags, mode, null, focus, zone, now), zone, {}, {}, {}, {}, {}, {}, {}) }
+
+    @Test fun weekLight() = render("08-week-light", content = overview(ViewMode.WEEK))
+    @Test fun weekDarkFocusWork() = render("09-week-dark-focus-work", dark = true, content = overview(ViewMode.WEEK, Focus.OnTag("work")))
+    @Test fun monthLight() = render("10-month-light", content = overview(ViewMode.MONTH))
+    @Test fun monthFocusUnlabeled() = render("11-month-focus-unlabeled", content = overview(ViewMode.MONTH, Focus.Unlabeled))
 }
