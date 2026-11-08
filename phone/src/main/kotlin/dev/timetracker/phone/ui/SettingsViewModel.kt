@@ -29,6 +29,10 @@ class SettingsViewModel(
         return repo.renameTag(tagId, name)
     }
 
+    fun setColor(tagId: String, color: Int) {
+        viewModelScope.launch { repo.setTagColor(tagId, color) }
+    }
+
     fun deleteTag(tagId: String) {
         viewModelScope.launch { repo.deleteTag(tagId) }
     }

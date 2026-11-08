@@ -151,6 +151,14 @@ class RenderScreensTest {
         }
     }
 
+    @Test fun tagColorSheet() = render("12-tag-color-sheet") {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+            Surface(shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                Box(Modifier.padding(top = 24.dp)) { TagColorSheetContent(tags[0], tags) {} }
+            }
+        }
+    }
+
     @Test fun emptyState() = render("06-empty", content = timeline(state = TimelineState(day, emptyList(), isEmpty = true)))
 
     // ---- Week / Month: three prior weeks of a routine with a few unlabeled evenings, plus today's sample ----

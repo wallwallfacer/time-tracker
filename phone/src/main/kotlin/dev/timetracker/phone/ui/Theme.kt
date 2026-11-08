@@ -88,18 +88,26 @@ fun TimeTrackerTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable
 data class TagTones(val rail: Color, val container: Color, val onContainer: Color)
 
 // Keyed by the stored TagPalette color. Light rails sit near tone 50 (3:1 on surface); dark rails are the stored hex.
-private val LightTones = mapOf(
+internal val LightTones = mapOf(
     0xFFE57373 to TagTones(Color(0xFFD9534F), Color(0xFFFFDAD6), Color(0xFF410002)),
-    0xFFFFB74D to TagTones(Color(0xFFD98200), Color(0xFFFFDDB5), Color(0xFF2A1800)),
-    0xFFFFF176 to TagTones(Color(0xFFA89400), Color(0xFFF3E98C), Color(0xFF201C00)),
+    0xFFFFB74D to TagTones(Color(0xFFCC7A00), Color(0xFFFFDDB5), Color(0xFF2A1800)),
+    0xFFFFF176 to TagTones(Color(0xFF9C8A00), Color(0xFFF3E98C), Color(0xFF201C00)),
     0xFF81C784 to TagTones(Color(0xFF43A047), Color(0xFFC3EFC0), Color(0xFF002106)),
     0xFF4DB6AC to TagTones(Color(0xFF00897B), Color(0xFFB4EFE6), Color(0xFF00201D)),
     0xFF64B5F6 to TagTones(Color(0xFF1E88E5), Color(0xFFD0E4FF), Color(0xFF001D35)),
     0xFF9575CD to TagTones(Color(0xFF7E57C2), Color(0xFFE9DDFF), Color(0xFF22005D)),
     0xFFF06292 to TagTones(Color(0xFFD81B60), Color(0xFFFFD9E2), Color(0xFF3E001D)),
+    0xFF7986CB to TagTones(Color(0xFF3949AB), Color(0xFFC5CAE9), Color(0xFF1A237E)),
+    0xFF4DD0E1 to TagTones(Color(0xFF00838F), Color(0xFFB2EBF2), Color(0xFF002022)),
+    0xFFDCE775 to TagTones(Color(0xFF827717), Color(0xFFF0F4C3), Color(0xFF1F2000)),
+    0xFFFF8A65 to TagTones(Color(0xFFD84315), Color(0xFFFFDBCF), Color(0xFF3A0B00)),
+    0xFFA1887F to TagTones(Color(0xFF8D6E63), Color(0xFFD7CCC8), Color(0xFF2B1B17)),
+    0xFF90A4AE to TagTones(Color(0xFF607D8B), Color(0xFFCFD8DC), Color(0xFF1C2529)),
+    0xFFBA68C8 to TagTones(Color(0xFF8E24AA), Color(0xFFE1BEE7), Color(0xFF33004A)),
+    0xFFFFD54F to TagTones(Color(0xFF9C6B00), Color(0xFFFFE7A8), Color(0xFF2B1F00)),
 ).mapKeys { it.key.toInt() }
 
-private val DarkTones = mapOf(
+internal val DarkTones = mapOf(
     0xFFE57373 to TagTones(Color(0xFFE57373), Color(0xFF6B2A27), Color(0xFFFFDAD6)),
     0xFFFFB74D to TagTones(Color(0xFFFFB74D), Color(0xFF5E4100), Color(0xFFFFDDB5)),
     0xFFFFF176 to TagTones(Color(0xFFFFF176), Color(0xFF4C4600), Color(0xFFF3E98C)),
@@ -108,6 +116,14 @@ private val DarkTones = mapOf(
     0xFF64B5F6 to TagTones(Color(0xFF64B5F6), Color(0xFF00497C), Color(0xFFD0E4FF)),
     0xFF9575CD to TagTones(Color(0xFF9575CD), Color(0xFF4F378A), Color(0xFFE9DDFF)),
     0xFFF06292 to TagTones(Color(0xFFF06292), Color(0xFF7A2949), Color(0xFFFFD9E2)),
+    0xFF7986CB to TagTones(Color(0xFF7986CB), Color(0xFF2E3A8C), Color(0xFFDEE0FF)),
+    0xFF4DD0E1 to TagTones(Color(0xFF4DD0E1), Color(0xFF004F58), Color(0xFFB2EBF2)),
+    0xFFDCE775 to TagTones(Color(0xFFDCE775), Color(0xFF434A00), Color(0xFFF0F4C3)),
+    0xFFFF8A65 to TagTones(Color(0xFFFF8A65), Color(0xFF7A2E14), Color(0xFFFFDBCF)),
+    0xFFA1887F to TagTones(Color(0xFFA1887F), Color(0xFF4E342E), Color(0xFFEFDFD9)),
+    0xFF90A4AE to TagTones(Color(0xFF90A4AE), Color(0xFF37474F), Color(0xFFCFD8DC)),
+    0xFFBA68C8 to TagTones(Color(0xFFBA68C8), Color(0xFF5E1B73), Color(0xFFF3D6FA)),
+    0xFFFFD54F to TagTones(Color(0xFFFFD54F), Color(0xFF5C4300), Color(0xFFFFE7A8)),
 ).mapKeys { it.key.toInt() }
 
 @Composable

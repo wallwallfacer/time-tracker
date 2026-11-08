@@ -12,9 +12,13 @@ object TagPalette {
     val colors: List<Int> = listOf(
         0xFFE57373.toInt(), 0xFFFFB74D.toInt(), 0xFFFFF176.toInt(), 0xFF81C784.toInt(),
         0xFF4DB6AC.toInt(), 0xFF64B5F6.toInt(), 0xFF9575CD.toInt(), 0xFFF06292.toInt(),
+        // Added for more than eight tags: indigo, cyan, lime, deep orange, brown, blue grey, purple, amber.
+        0xFF7986CB.toInt(), 0xFF4DD0E1.toInt(), 0xFFDCE775.toInt(), 0xFFFF8A65.toInt(),
+        0xFFA1887F.toInt(), 0xFF90A4AE.toInt(), 0xFFBA68C8.toInt(), 0xFFFFD54F.toInt(),
     )
 
-    fun next(existing: Int): Int = colors[existing % colors.size]
+    /** The first palette color no tag uses yet; once all are taken, cycles by count. */
+    fun next(used: Collection<Int>): Int = colors.firstOrNull { it !in used } ?: colors[used.size % colors.size]
 }
 
 class PointRepository(private val db: AppDatabase, val clock: () -> Long = System::currentTimeMillis) {
@@ -48,7 +52,7 @@ class PointRepository(private val db: AppDatabase, val clock: () -> Long = Syste
     suspend fun createTag(name: String): Tag? {
         val trimmed = name.trim()
         if (tagDao.countByName(trimmed) > 0) return null
-        val color = TagPalette.next(tags.first().size)
+        val color = TagPalette.next(tags.first().map { it.color })
         return Tag(UUID.randomUUID().toString(), trimmed, color, clock()).also { tagDao.insert(it.toEntity()) }
     }
 
@@ -63,6 +67,8 @@ class PointRepository(private val db: AppDatabase, val clock: () -> Long = Syste
 
     /** Returns the number of points whose tag was cleared. */
     suspend fun deleteTag(id: String): Int = pointDao.clearTag(id).also { tagDao.delete(id) }
+
+    suspend fun setTagColor(id: String, color: Int) = tagDao.setColor(id, color)
 
     suspend fun countWithTag(tagId: String): Int = pointDao.countWithTag(tagId)
 
