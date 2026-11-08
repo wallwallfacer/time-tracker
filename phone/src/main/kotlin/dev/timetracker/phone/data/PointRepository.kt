@@ -12,10 +12,26 @@ object TagPalette {
     val colors: List<Int> = listOf(
         0xFFE57373.toInt(), 0xFFFFB74D.toInt(), 0xFFFFF176.toInt(), 0xFF81C784.toInt(),
         0xFF4DB6AC.toInt(), 0xFF64B5F6.toInt(), 0xFF9575CD.toInt(), 0xFFF06292.toInt(),
-        // Added for more than eight tags: indigo, cyan, lime, deep orange, brown, blue grey, purple, amber.
-        0xFF7986CB.toInt(), 0xFF4DD0E1.toInt(), 0xFFDCE775.toInt(), 0xFFFF8A65.toInt(),
-        0xFFA1887F.toInt(), 0xFF90A4AE.toInt(), 0xFFBA68C8.toInt(), 0xFFFFD54F.toInt(),
+        // 24 more, picked by script to stay as far apart as possible (OKLab) from the 8 above and each other in both
+        // themes; most distinct first, so new tags spread out before similar shades are used.
+        0xFFF277FE.toInt(), 0xFFE5BBE1.toInt(), 0xFF9ED3F2.toInt(), 0xFFA3745B.toInt(),
+        0xFFADA3FF.toInt(), 0xFFB5D6AA.toInt(), 0xFFFD80C4.toInt(), 0xFFAD75FE.toInt(),
+        0xFFFA6004.toInt(), 0xFFF8AAFF.toInt(), 0xFF7E7AA8.toInt(), 0xFFF3909D.toInt(),
+        0xFF3A74FF.toInt(), 0xFF86F8CF.toInt(), 0xFF088BBE.toInt(), 0xFFAC731A.toInt(),
+        0xFF6E8D35.toInt(), 0xFFFE5166.toInt(), 0xFFE0C796.toInt(), 0xFF718FFF.toInt(),
+        0xFF6CF6FB.toInt(), 0xFF5B7EC8.toInt(), 0xFFF19773.toInt(), 0xFFA26F83.toInt(),
     )
+
+    /** The palette ordered by hue, so the picker reads as a spectrum. */
+    val byHue: List<Int> = colors.sortedBy { hue(it) }
+
+    private fun hue(argb: Int): Float {
+        val r = (argb shr 16 and 0xFF) / 255f; val g = (argb shr 8 and 0xFF) / 255f; val b = (argb and 0xFF) / 255f
+        val max = maxOf(r, g, b); val d = max - minOf(r, g, b)
+        if (d == 0f) return 0f
+        val h = when (max) { r -> ((g - b) / d).mod(6f); g -> (b - r) / d + 2; else -> (r - g) / d + 4 }
+        return h * 60
+    }
 
     /** The first palette color no tag uses yet; once all are taken, cycles by count. */
     fun next(used: Collection<Int>): Int = colors.firstOrNull { it !in used } ?: colors[used.size % colors.size]

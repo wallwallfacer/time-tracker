@@ -7,6 +7,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -139,6 +143,7 @@ fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
     coloring?.let { tag ->
         ModalBottomSheet(
             onDismissRequest = { coloring = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
@@ -197,11 +202,11 @@ private fun TagItem(tag: Tag, shape: RoundedCornerShape, onColor: () -> Unit, on
     }
 }
 
-/** Sixteen swatches, four per row; each shows the names of the other tags already using it. */
+/** All palette swatches by hue, six per row; each shows the names of the other tags already using it. */
 @Composable
 internal fun TagColorSheetContent(tag: Tag, tags: List<Tag>, onPick: (Int) -> Unit) {
     val usedBy = tags.filter { it.id != tag.id }.groupBy({ it.color }, { it.name })
-    Column(Modifier.padding(start = 20.dp, end = 20.dp, bottom = 28.dp)) {
+    Column(Modifier.verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 28.dp)) {
         Text(stringResource(R.string.tag_color_title, tag.name), style = MaterialTheme.typography.titleLarge)
         Text(
             stringResource(R.string.tag_color_help),
@@ -209,11 +214,12 @@ internal fun TagColorSheetContent(tag: Tag, tags: List<Tag>, onPick: (Int) -> Un
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        TagPalette.colors.chunked(4).forEach { row ->
+        TagPalette.byHue.chunked(6).forEach { row ->
             Row(Modifier.fillMaxWidth()) {
                 row.forEach { color ->
                     Swatch(color, selected = color == tag.color, usedBy = usedBy[color]?.joinToString(", "), Modifier.weight(1f)) { onPick(color) }
                 }
+                repeat(6 - row.size) { Spacer(Modifier.weight(1f)) }
             }
         }
     }
@@ -228,12 +234,12 @@ private fun Swatch(color: Int, selected: Boolean, usedBy: String?, modifier: Mod
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            Modifier.size(48.dp).clip(CircleShape).background(tones.container)
+            Modifier.size(42.dp).clip(CircleShape).background(tones.container)
                 .then(if (selected) Modifier.border(2.5.dp, tones.rail, CircleShape) else Modifier),
             contentAlignment = Alignment.Center,
         ) {
-            if (selected) Icon(Icons.Filled.Check, null, Modifier.size(24.dp), tint = tones.onContainer)
-            else Box(Modifier.size(18.dp).clip(CircleShape).background(tones.rail))
+            if (selected) Icon(Icons.Filled.Check, null, Modifier.size(22.dp), tint = tones.onContainer)
+            else Box(Modifier.size(16.dp).clip(CircleShape).background(tones.rail))
         }
         Text(
             usedBy.orEmpty(),

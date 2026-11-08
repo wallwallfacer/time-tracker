@@ -89,11 +89,11 @@ class SettingsViewModelTest {
     @Test fun `setColor changes only that tag`() = runTest {
         val work = repo.createTag("Work")!!
         val play = repo.createTag("Play")!!
-        val indigo = TagPalette.colors[8]
-        vm.setColor(work.id, indigo)
+        val picked = TagPalette.colors[20]
+        vm.setColor(work.id, picked)
         advanceUntilIdle()
-        val tags = repo.tags.first { t -> t.any { it.color == indigo } }.associateBy { it.id }
-        assertEquals(indigo, tags.getValue(work.id).color)
+        val tags = repo.tags.first { t -> t.any { it.color == picked } }.associateBy { it.id }
+        assertEquals(picked, tags.getValue(work.id).color)
         assertEquals(play.color, tags.getValue(play.id).color)
     }
 
