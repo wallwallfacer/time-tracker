@@ -27,7 +27,7 @@ zero-decision; classification is deferred.
 
 **Non-goals (explicitly out of MVP)**
 
-- Statistics, charts, summaries, goals, reminders.
+- Goals, reminders. (Week/Month summaries: see 2026-11-08-week-month-overview-design.md.)
 - Cloud sync, accounts, backup beyond CSV export.
 - Labeling on the watch.
 - iOS, other watch platforms (Tizen), tablets.

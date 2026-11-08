@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.google.android.gms.wearable.Wearable
 import dev.timetracker.core.Block
+import dev.timetracker.core.ViewMode
 import dev.timetracker.core.deriveBlocks
 import dev.timetracker.phone.data.AppDatabase
 import dev.timetracker.phone.data.PointRepository
@@ -31,6 +32,7 @@ import dev.timetracker.phone.sync.LatestPublisher
 import dev.timetracker.phone.sync.PointItemConsumer
 import dev.timetracker.phone.ui.LabelSheet
 import dev.timetracker.phone.ui.LabelSheetViewModel
+import dev.timetracker.phone.ui.OverviewScreen
 import dev.timetracker.phone.ui.SettingsScreen
 import dev.timetracker.phone.ui.SettingsViewModel
 import dev.timetracker.phone.ui.TimeTrackerTheme
@@ -93,6 +95,25 @@ class MainActivity : ComponentActivity() {
                 if (screen == "settings") {
                     BackHandler { screen = "timeline" }
                     SettingsScreen(settingsViewModel, zone, onBack = { screen = "timeline" })
+                    return@TimeTrackerTheme
+                }
+                val mode by viewModel.mode.collectAsStateWithLifecycle()
+                if (mode != ViewMode.DAY) {
+                    BackHandler { viewModel.setMode(ViewMode.DAY) }
+                    // Null only for the first frame after switching, before the overview is computed.
+                    viewModel.overview.collectAsStateWithLifecycle().value?.let {
+                        OverviewScreen(
+                            state = it,
+                            zone = zone,
+                            onPrev = viewModel::previous,
+                            onNext = viewModel::next,
+                            onCurrent = viewModel::current,
+                            onMode = viewModel::setMode,
+                            onOpenDay = viewModel::openDay,
+                            onFocus = viewModel::toggleFocus,
+                            onSettings = { screen = "settings" },
+                        )
+                    }
                     return@TimeTrackerTheme
                 }
                 val state by viewModel.state.collectAsStateWithLifecycle()

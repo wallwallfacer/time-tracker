@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Week &amp; Month Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght,ROND@6..144,400..800,0..100&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=block" rel="stylesheet">
+<style>
+/* Board and tokens copied from b-rail.html (the shipped design) so the candidates sit in the same system. */
+:root{--font:"Google Sans Flex",system-ui,sans-serif;--board:#EEEBF3;--board-ink:#1B1B21;--board-muted:#5A5966;--board-card:#FBF8FF}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--board);color:var(--board-ink);font-family:var(--font);-webkit-font-smoothing:antialiased;padding:48px 40px 80px}
+.ms{font-family:"Material Symbols Rounded";font-weight:400;font-style:normal;font-size:24px;line-height:1;display:inline-block;
+  font-variation-settings:"FILL" 0,"opsz" 24;user-select:none;white-space:nowrap}
+.ms.f{font-variation-settings:"FILL" 1,"opsz" 24}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.tab{font-variant-numeric:tabular-nums}
+
+.intro{display:grid;grid-template-columns:minmax(320px,1.2fr) minmax(320px,1fr);gap:40px;max-width:1240px;margin-bottom:56px}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#4355B9}
+.intro h1{font-size:56px;line-height:1;font-weight:650;letter-spacing:-.02em;margin:10px 0 14px;font-variation-settings:"ROND" 100}
+.intro p{font-size:18px;line-height:1.45;color:#33323C;max-width:600px}
+.panel{background:var(--board-card);border-radius:28px;padding:22px 24px}
+.panel+.panel{margin-top:14px}
+.panel h3{font-size:12px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--board-muted);margin-bottom:12px}
+.panel ul{list-style:none;display:grid;gap:9px}
+.panel li{font-size:14.5px;line-height:1.45;color:#33323C;padding-left:22px;position:relative}
+.panel li::before{content:"";position:absolute;left:3px;top:6px;width:8px;height:8px;border-radius:50%;background:#1B1B21}
+.panel li b{font-weight:650}
+.warn{margin-top:22px;display:flex;gap:12px;background:#FFDAD6;color:#410002;border-radius:20px;padding:14px 18px;font-size:14.5px;line-height:1.45;max-width:600px}
+.warn .ms{font-size:22px}
+
+.cand{margin-bottom:72px}
+.chead{display:grid;grid-template-columns:auto 1fr;gap:6px 28px;align-items:end;max-width:1180px;margin-bottom:24px}
+.chead .letter{grid-row:span 2;font-size:96px;line-height:.85;font-weight:650;font-variation-settings:"ROND" 100;color:#4355B9}
+.chead h2{font-size:34px;font-weight:650;letter-spacing:-.01em;font-variation-settings:"ROND" 100}
+.chead h2 small{font-size:16px;font-weight:550;color:var(--board-muted);margin-left:10px;letter-spacing:0}
+.chead p{font-size:16px;line-height:1.45;color:#33323C;max-width:820px}
+.chead p b{font-weight:650}
+
+.frames{display:flex;flex-wrap:wrap;gap:40px 36px;align-items:flex-start}
+.fw{width:360px}
+.fw h2{font-size:15px;font-weight:650;margin-bottom:12px;display:flex;gap:8px;align-items:center}
+.fw h2 span{font-size:12px;font-weight:600;color:var(--board-muted);background:#E1E0EA;border-radius:8px;padding:2px 8px}
+.callouts{margin-top:14px;display:grid;gap:8px}
+.callouts p{font-size:13px;line-height:1.45;color:#3D3C47;padding-left:30px;position:relative}
+.callouts p b{position:absolute;left:0;top:0;width:20px;height:20px;border-radius:50%;background:#1B1B21;color:#fff;font-size:11px;display:grid;place-items:center}
+
+.light{
+  --surface:#FBF8FF;--surf-low:#F5F2FA;--surf:#EFEDF4;--surf-high:#E9E7EF;--surf-highest:#E3E1E9;
+  --on-surface:#1B1B21;--on-var:#46464F;--outline:#777680;--outline-var:#C7C5D0;
+  --primary:#4355B9;--on-primary:#fff;--pc:#DEE0FF;--on-pc:#00105C;--sc:#E1E0F9;--on-sc:#191A2C;
+  --r-red:#D9534F;--c-red:#FFDAD6;--o-red:#410002;--r-org:#D98200;--c-org:#FFDDB5;--o-org:#2A1800;
+  --r-yel:#A89400;--c-yel:#F3E98C;--o-yel:#201C00;--r-grn:#43A047;--c-grn:#C3EFC0;--o-grn:#002106;
+  --r-tea:#00897B;--c-tea:#B4EFE6;--o-tea:#00201D;--r-blu:#1E88E5;--c-blu:#D0E4FF;--o-blu:#001D35;
+  --r-pur:#7E57C2;--c-pur:#E9DDFF;--o-pur:#22005D;--r-pnk:#D81B60;--c-pnk:#FFD9E2;--o-pnk:#3E001D;
+}
+.dark{
+  --surface:#121318;--surf-low:#1A1B21;--surf:#1F1F25;--surf-high:#292A2F;--surf-highest:#34343A;
+  --on-surface:#E4E1E9;--on-var:#C7C5D0;--outline:#91909A;--outline-var:#46464F;
+  --primary:#BAC3FF;--on-primary:#08218A;--pc:#293CA0;--on-pc:#DEE0FF;--sc:#444559;--on-sc:#E1E0F9;
+  --r-red:#E57373;--c-red:#6B2A27;--o-red:#FFDAD6;--r-org:#FFB74D;--c-org:#5E4100;--o-org:#FFDDB5;
+  --r-yel:#FFF176;--c-yel:#4C4600;--o-yel:#F3E98C;--r-grn:#81C784;--c-grn:#1F5223;--o-grn:#C3EFC0;
+  --r-tea:#4DB6AC;--c-tea:#00504A;--o-tea:#B4EFE6;--r-blu:#64B5F6;--c-blu:#00497C;--o-blu:#D0E4FF;
+  --r-pur:#9575CD;--c-pur:#4F378A;--o-pur:#E9DDFF;--r-pnk:#F06292;--c-pnk:#7A2949;--o-pnk:#FFD9E2;
+}
+.t-work{--tag:var(--r-blu);--tc:var(--c-blu);--otc:var(--o-blu)}
+.t-commute{--tag:var(--r-org);--tc:var(--c-org);--otc:var(--o-org)}
+.t-breakfast{--tag:var(--r-yel);--tc:var(--c-yel);--otc:var(--o-yel)}
+.t-lunch{--tag:var(--r-grn);--tc:var(--c-grn);--otc:var(--o-grn)}
+.t-sleep{--tag:var(--r-pur);--tc:var(--c-pur);--otc:var(--o-pur)}
+.t-reading{--tag:var(--r-tea);--tc:var(--c-tea);--otc:var(--o-tea)}
+.t-exercise{--tag:var(--r-red);--tc:var(--c-red);--otc:var(--o-red)}
+.u{--tag:transparent;--tc:transparent;--otc:var(--on-var)}
+/* Unlabeled = the same hatch the Day rail uses */
+.hatch,.s.u,.stack .u,.wk .u{background:repeating-linear-gradient(-45deg,var(--outline) 0 1.5px,transparent 1.5px 4px)!important}
+
+/* Phone chrome (from b-rail.html) */
+.phone{width:360px;height:780px;border-radius:36px;overflow:hidden;position:relative;background:var(--surface);color:var(--on-surface);
+  box-shadow:0 0 0 1px rgba(0,0,0,.08),0 24px 48px -16px rgba(30,30,60,.28),0 2px 6px rgba(30,30,60,.08)}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column}
+.status{height:36px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:4px 24px 0 26px;font-size:14px;font-weight:550}
+.status .ms{font-size:17px;margin-left:3px}
+.gesture{height:20px;flex:none;display:grid;place-items:center}
+.gesture i{width:108px;height:4px;border-radius:2px;background:var(--on-surface);opacity:.85}
+.appbar{height:60px;flex:none;display:flex;align-items:center;padding:0 8px 0 4px;gap:2px}
+.ib{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:var(--on-var)}
+.daytitle{height:44px;padding:0 12px;border-radius:22px;font-size:21px;font-weight:650;letter-spacing:-.01em;display:flex;align-items:center;gap:7px;font-variation-settings:"ROND" 100;white-space:nowrap}
+.daytitle .today{width:8px;height:8px;border-radius:50%;background:var(--primary)}
+.sp{flex:1}
+.gear{background:var(--surf-high);color:var(--on-surface)}
+/* Day / Week / Month: M3 segmented button */
+.segc{flex:none;display:flex;margin:0 16px 10px;height:40px;border-radius:20px;box-shadow:inset 0 0 0 1px var(--outline);overflow:hidden}
+.segc button{flex:1;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px}
+.segc button+button{border-left:1px solid var(--outline)}
+.segc .on{background:var(--sc);color:var(--on-sc)}
+.segc .ms{font-size:18px}
+.body{flex:1;overflow:hidden;padding:2px 16px 0;position:relative}
+
+/* Legend chips (A, C) */
+.legend{display:flex;flex-wrap:wrap;gap:6px}
+.lg{height:30px;border-radius:10px;background:var(--tc);color:var(--otc);display:flex;align-items:center;gap:6px;padding:0 10px 0 8px;font-size:12.5px;font-weight:600}
+.lg i{width:9px;height:9px;border-radius:50%;background:var(--tag)}
+.lg b{font-weight:550;opacity:.85;font-variant-numeric:tabular-nums}
+.lg.u{box-shadow:inset 0 0 0 1.5px var(--outline);border:0}
+.lg.u i{box-shadow:inset 0 0 0 1.5px var(--outline)}
+.sectl{font-size:12px;font-weight:650;color:var(--on-var);margin:14px 2px 8px;display:flex;justify-content:space-between}
+.sectl span{font-weight:500}
+
+/* ---------- A · Rhythm ---------- */
+.aw{display:grid;grid-template-columns:22px 1fr;gap:6px}
+.axis{position:relative;font-size:10.5px;font-weight:600;color:var(--on-var);font-variant-numeric:tabular-nums}
+.axis span{position:absolute;right:0;transform:translateY(-50%)}
+.cols{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:var(--gap)}
+.ch{height:var(--chh);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;font-size:12px;font-weight:650;line-height:1.15;padding-bottom:6px;font-variant-numeric:tabular-nums}
+.ch b{font-size:10.5px;font-weight:600;color:var(--on-var)}
+.ch.we b{color:var(--primary)}
+.track{position:relative;border-radius:var(--r);overflow:hidden;background:var(--surf)}
+.track::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,transparent calc(25% - .5px),color-mix(in srgb,var(--surface) 70%,transparent) calc(25% - .5px) calc(25% + .5px),transparent calc(25% + .5px) calc(50% - .5px),color-mix(in srgb,var(--surface) 70%,transparent) calc(50% - .5px) calc(50% + .5px),transparent calc(50% + .5px) calc(75% - .5px),color-mix(in srgb,var(--surface) 70%,transparent) calc(75% - .5px) calc(75% + .5px),transparent calc(75% + .5px))}
+.track.fut{background:transparent;box-shadow:inset 0 0 0 1px var(--outline-var)}
+.track.fut::after{display:none}
+.s{position:absolute;left:0;right:0;background:var(--tag);box-shadow:0 -1px 0 var(--surface)}
+.h .s{top:0;bottom:0;left:auto;right:auto;box-shadow:-1px 0 0 var(--surface)}
+.nowdot{position:absolute;left:50%;width:10px;height:10px;border-radius:50%;background:var(--primary);transform:translate(-50%,-50%);z-index:2;
+  box-shadow:0 0 0 2px var(--surface);animation:ping 1.6s ease-out infinite}
+@keyframes ping{0%{box-shadow:0 0 0 2px var(--surface),0 0 0 2px color-mix(in srgb,var(--primary) 55%,transparent)}100%{box-shadow:0 0 0 2px var(--surface),0 0 0 10px transparent}}
+.mlab{display:grid;grid-template-columns:repeat(31,1fr);gap:3px;margin-top:5px;font-size:10px;font-weight:600;color:var(--on-var);text-align:center;font-variant-numeric:tabular-nums}
+.mlab span{white-space:nowrap;overflow:visible}
+
+/* ---------- B · Totals ---------- */
+.hero{display:flex;align-items:center;gap:14px;background:var(--surf);border-radius:24px;padding:12px 10px 12px 18px}
+.pct{font-size:44px;line-height:1;font-weight:600;letter-spacing:-.02em;font-variation-settings:"ROND" 100;font-variant-numeric:tabular-nums}
+.pct small{font-size:22px;font-weight:600;margin-left:1px}
+.pl{font-size:12px;font-weight:600;color:var(--on-var);margin-top:2px}
+.hu{flex:1;font-size:13px;line-height:1.35;color:var(--on-var)}
+.hu b{color:var(--on-surface);font-weight:650;font-size:14.5px}
+.pill{height:40px;border-radius:20px;background:var(--pc);color:var(--on-pc);display:flex;align-items:center;gap:6px;padding:0 16px 0 12px;font-size:14px;font-weight:650}
+.pill .ms{font-size:18px}
+.stack{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:14px 0 4px;gap:2px}
+.stack i{background:var(--tag);min-width:2px}
+.trs{display:grid;gap:2px;margin-top:10px}
+.tr{background:var(--surf-low);border-radius:6px;padding:9px 12px 10px}
+.tr:first-child{border-radius:18px 18px 6px 6px}.tr:last-child{border-radius:6px 6px 18px 18px}
+.l1{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:650;line-height:18px}
+.l1 i{width:10px;height:10px;border-radius:50%;background:var(--tag)}
+.l1 .u-dot{box-shadow:inset 0 0 0 1.5px var(--outline)}
+.l1 .tot{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+.l2{display:flex;align-items:center;gap:10px;margin-top:6px}
+.bar{flex:1;height:6px;border-radius:3px;background:var(--surf-highest);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:var(--tag)}
+.dl{font-size:11.5px;font-weight:600;color:var(--on-var);min-width:74px;text-align:right;display:flex;align-items:center;justify-content:flex-end;font-variant-numeric:tabular-nums}
+.dl .ms{font-size:16px;margin-right:-1px}
+.tight .tr{padding:7px 12px 8px}.tight .l2{margin-top:4px}
+.tr.ul{background:transparent;box-shadow:inset 0 0 0 1.5px var(--outline-var)}
+.tr.ul .l1{font-style:italic;font-weight:550;color:var(--on-var)}
+.wks{display:flex;gap:10px;align-items:flex-end;height:78px;margin-top:8px;padding:0 4px}
+.wk{flex:1;display:flex;flex-direction:column;align-items:stretch;gap:5px;height:100%;justify-content:flex-end}
+.wk .col{display:flex;flex-direction:column-reverse;border-radius:8px;overflow:hidden;gap:1.5px}
+.wk .col i{background:var(--tag)}
+.wk span{font-size:10.5px;font-weight:600;color:var(--on-var);text-align:center;font-variant-numeric:tabular-nums}
+.wk.cur span{color:var(--primary)}
+
+/* ---------- C · Calendar ---------- */
+.hx{display:flex;justify-content:space-between;font-size:10px;font-weight:600;color:var(--on-var);padding:0 14px 4px;font-variant-numeric:tabular-nums}
+.dcs{display:grid;gap:5px}
+.dc{background:var(--surf);border-radius:18px;padding:9px 14px 9px}
+.dc:first-child{border-radius:22px 22px 10px 10px}.dc:last-child{border-radius:10px 10px 22px 22px}
+.dh{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:650;line-height:18px}
+.dh span:not(.sp):not(.ub):not(.ms){font-weight:500;color:var(--on-var);font-size:13px}
+.ub{height:20px;border-radius:7px;border:1.3px dashed var(--outline);color:var(--on-var);font-size:11px;font-weight:600;padding:0 7px;display:flex;align-items:center}
+.dh .ok{font-size:17px;color:var(--primary)}
+.strip{position:relative;height:12px;border-radius:6px;overflow:hidden;background:var(--surf-highest);margin:6px 0 6px}
+.top{display:flex;gap:10px;font-size:11.5px;font-weight:550;color:var(--on-var);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+.top span{display:flex;align-items:center;gap:4px}
+.top i{width:7px;height:7px;border-radius:50%;background:var(--tag)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .wd{font-size:11px;font-weight:650;color:var(--on-var);text-align:center;padding-bottom:2px}
+.cc{height:62px;border-radius:14px;background:var(--surf-low);display:flex;flex-direction:column;align-items:center;padding-top:5px;gap:3px;position:relative}
+.cc .cn{font-size:12px;font-weight:650;font-variant-numeric:tabular-nums}
+.cc.out{background:transparent}.cc.out .cn{color:var(--outline)}
+.cc.fut .cn{color:var(--on-var);font-weight:500}
+.cc.today{box-shadow:inset 0 0 0 2px var(--primary)}
+.cc.today .cn{color:var(--primary)}
+.donut{width:32px;height:32px;border-radius:50%;-webkit-mask:radial-gradient(circle,transparent 46%,#000 47%);mask:radial-gradient(circle,transparent 46%,#000 47%)}
+.cc .udot{position:absolute;top:6px;right:6px;width:6px;height:6px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--outline)}
+/* ---------- D · Hybrid (A's grid on top, B's list below) ---------- */
+.s.dim{opacity:.14}
+.hrow{display:flex;align-items:center;gap:8px;margin:12px 0 0;padding:6px 6px 6px 14px;background:var(--surf);border-radius:20px;font-size:13px;color:var(--on-var)}
+.hrow b{font-size:20px;font-weight:650;color:var(--on-surface);font-variant-numeric:tabular-nums;font-variation-settings:"ROND" 100}
+.hrow .pill{margin-left:auto;height:36px}
+.tr.sel{background:var(--tc);color:var(--otc);box-shadow:inset 0 0 0 2px var(--tag)}
+.tr.sel .dl{color:var(--otc)}
+.tr.ul.sel{background:var(--surf);box-shadow:inset 0 0 0 2px var(--on-var)}
+.focus{display:flex;align-items:center;gap:6px;height:28px;margin-top:8px;font-size:12px;font-weight:600;color:var(--on-var)}
+.focus .x{margin-left:auto;height:28px;border-radius:14px;background:var(--surf-high);color:var(--on-surface);padding:0 10px 0 6px;display:flex;align-items:center;gap:2px}
+.focus .ms{font-size:16px}
+.more{position:absolute;left:0;right:0;bottom:0;height:56px;background:linear-gradient(to bottom,transparent,var(--surface));pointer-events:none}
+.review{margin-top:12px;height:46px;border-radius:23px;background:var(--pc);color:var(--on-pc);display:flex;align-items:center;justify-content:center;gap:8px;font-size:14.5px;font-weight:650;width:100%}
+.review .ms{font-size:20px}
+</style>
+</head>
+<body>
+
+<section class="intro">
+  <div>
+    <div class="eyebrow">Overview · design candidates</div>
+    <h1>Week &amp; Month</h1>
+    <p>Three ways to zoom out from the Day rail, drawn in the shipped Rail system. Each candidate shows Week (light and dark) and Month. Same generated sample data in all of them: October 2026, now is Mon Oct 26 14:44, and today matches the Day screen's sample exactly.</p>
+    <div class="warn"><span class="ms">flag</span><div><b>This crosses an MVP non-goal.</b> The spec lists "statistics, charts, summaries" as out of scope, and the Rail brief says "Layout, not a chart". Whichever candidate wins, the spec's non-goals need an update.</div></div>
+  </div>
+  <div>
+    <div class="panel">
+      <h3>Shared by all three</h3>
+      <ul>
+        <li><b>Day · Week · Month</b> segmented button under the app bar. <b>‹ ›</b> steps one period, tapping the title jumps back to the current one.</li>
+        <li>Weeks start <b>Monday</b>. Blocks that cross midnight are split per day, like the Day screen already does.</li>
+        <li>Tap any day (column, card or cell) to open that day in Day view.</li>
+        <li>Unlabeled time keeps the Day screen's <b>hatch</b>, so "not done yet" reads the same everywhere.</li>
+        <li><b>No Mark button</b> on Week/Month: the hardware double-press still marks; the overview is for reading.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>Worth deciding alongside the pick</h3>
+      <ul>
+        <li>Sleep is the biggest tag every day. Show it, or let it be hidden from totals?</li>
+        <li>Mark button on overviews: hide (as drawn) or keep?</li>
+        <li>Mix and match: e.g. A's rhythm grid with B's totals list below it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div id="out"></div>
+
+<script>
+// ---- Sample data: points -> blocks, same model as core/Blocks.kt (a block runs to the next point; the last one runs to now) ----
+const D = 1440, TODAY = 25, NOW = TODAY * D + 14 * 60 + 44;           // day index 0 = Thu Oct 1 2026
+const dow = d => (d + 3) % 7;                                           // 0 = Monday
+let seed = 11; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+const j = m => Math.round((rnd() * 2 - 1) * m / 5) * 5;
+const P = [[0, 'Sleep']];
+for (let d = 0; d < TODAY; d++) {
+  const b = d * D;
+  // older days are mostly labeled; the last few still have gaps, as labeling happens later
+  const add = (m, t) => P.push([b + m, t !== 'Sleep' && rnd() < (d >= 21 ? .22 : .05) ? null : t]);
+  if (dow(d) < 5) {
+    const w = 420 + j(20); add(w, 'Breakfast'); let t = w + 30 + j(10); add(t, 'Commute'); add(t + 50 + j(10), 'Work');
+    const l = 720 + j(15); add(l, 'Lunch'); add(l + 55 + j(5), 'Work');
+    const lv = 1080 + j(30); add(lv, 'Commute'); t = lv + 50 + j(10);
+    if (dow(d) % 2 === 0) { add(t, 'Exercise'); t += 60 + j(15); }
+    add(t, rnd() < .6 ? 'Reading' : null); add(1380 + j(30), 'Sleep');
+  } else {
+    const w = 540 + j(30); add(w, 'Breakfast'); add(w + 45 + j(10), 'Reading'); add(780 + j(20), 'Lunch');
+    add(840 + j(20), dow(d) === 5 ? 'Exercise' : 'Reading'); add(960 + j(30), rnd() < .3 ? null : 'Reading'); add(1350 + j(30), 'Sleep');
+  }
+}
+[[430, 'Breakfast'], [465, 'Commute'], [515, 'Work'], [705, null], [705.2, 'Lunch'], [765, null], [872, null]]
+  .forEach(([m, t]) => P.push([TODAY * D + m, t]));                   // today = the Day screen's sample
+const B = P.map((p, i) => [p[0], P[i + 1] ? P[i + 1][0] : NOW, p[1]]);
+
+const clip = d => B.filter(b => b[0] < (d + 1) * D && b[1] > d * D).map(b => [Math.max(b[0], d * D), Math.min(b[1], (d + 1) * D), b[2]]);
+function totals(d0, d1) {
+  const t = {};
+  for (let d = d0; d <= d1; d++) for (const [s, e, g] of clip(d)) t[g] = (t[g] || 0) + e - s;
+  return t;
+}
+const unlCount = (d0, d1) => B.filter(b => b[2] === null && b[0] >= d0 * D && b[0] < (d1 + 1) * D).length;
+const ranked = t => Object.entries(t).filter(([g]) => g !== 'null').sort((a, b) => b[1] - a[1]);
+const cls = t => t && t !== 'null' ? 't-' + t.toLowerCase() : 'u';
+// same rules as core/Format.kt formatDuration
+const fmt = m => { const s = Math.floor(m * 60); if (s < 60) return s + 's'; m = Math.floor(m); return m < 60 ? m + 'm' : `${Math.floor(m / 60)}h ${m % 60}m`; };
+const fmtH = m => { m = Math.round(m); return m < 60 ? m + 'm' : `${Math.floor(m / 60)}h ${m % 60}m`; };
+const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const WEEK = [18, 24], PREV = [11, 17];
+
+// ---- Chrome ----
+const status = `<div class="status"><span class="tab">14:44</span><span><span class="ms f">signal_cellular_4_bar</span><span class="ms f">wifi</span><span class="ms f">battery_5_bar</span></span></div>`;
+const phone = (theme, title, mode, body) => `<div class="phone ${theme}"><div class="screen">${status}
+  <header class="appbar"><button class="ib"><span class="ms">chevron_left</span></button><button class="daytitle">${title}</button>
+  <button class="ib"><span class="ms">chevron_right</span></button><span class="sp"></span><button class="ib gear"><span class="ms">settings</span></button></header>
+  <div class="segc">${['Day', 'Week', 'Month'].map(m => `<button class="${m === mode ? 'on' : ''}">${m === mode ? '<span class="ms">check</span>' : ''}${m}</button>`).join('')}</div>
+  <main class="body">${body}</main><div class="gesture"><i></i></div></div></div>`;
+const frame = (name, sub, theme, title, mode, body, notes) => `<div class="fw"><h2>${name} <span>${sub}</span></h2>${phone(theme, title, mode, body)}
+  <div class="callouts">${notes.map((n, i) => `<p><b>${i + 1}</b>${n}</p>`).join('')}</div></div>`;
+const legend = t => `<div class="legend">${ranked(t).map(([g, m]) => `<span class="lg ${cls(g)}"><i></i>${g}<b>${fmtH(m)}</b></span>`).join('')}
+  ${t.null ? `<span class="lg u"><i></i>Unlabeled<b>${fmtH(t.null)}</b></span>` : ''}</div>`;
+const vsegs = (d, H, focus) => clip(d).map(([s, e, g]) => `<i class="s ${cls(g)}${focus && String(g) !== focus ? ' dim' : ''}" style="top:${(s - d * D) / D * H}px;height:${(e - s) / D * H}px"></i>`).join('')
+  + (d === TODAY ? `<i class="nowdot" style="top:${(NOW - d * D) / D * H}px"></i>` : '');
+const hsegs = d => clip(d).map(([s, e, g]) => `<i class="s ${cls(g)}" style="left:${(s - d * D) / D * 100}%;width:${(e - s) / D * 100}%"></i>`).join('');
+const axis = H => `<div class="axis" style="height:${H}px">${[0, 6, 12, 18, 24].map(h => `<span style="top:${h / 24 * H}px">${String(h).padStart(2, '0')}</span>`).join('')}</div>`;
+
+// ---- A · Rhythm ----
+function aWeek() {
+  const H = 392, days = [18, 19, 20, 21, 22, 23, 24];
+  return `<div class="aw"><div style="padding-top:40px">${axis(H)}</div>
+    <div class="cols" style="--n:7;--gap:6px;--r:12px;--chh:40px">${days.map(d => `<div><div class="ch ${dow(d) > 4 ? 'we' : ''}"><b>${'MTWTFSS'[dow(d)]}</b>${d + 1}</div>
+      <div class="track" style="height:${H}px">${vsegs(d, H)}</div></div>`).join('')}</div></div>
+    <div class="sectl">Week total <span>by tag</span></div>${legend(totals(...WEEK))}`;
+}
+function aMonth() {
+  const H = 388, days = [...Array(31).keys()];
+  return `<div class="aw"><div style="padding-top:22px">${axis(H)}</div><div>
+    <div class="cols" style="--n:31;--gap:3px;--r:4px;--chh:22px">${days.map(d => `<div><div class="ch ${dow(d) > 4 ? 'we' : ''}"><b>${dow(d) ? '' : 'M'}</b></div>
+      <div class="track ${d > TODAY ? 'fut' : ''}" style="height:${H}px">${d <= TODAY ? vsegs(d, H) : ''}</div></div>`).join('')}</div>
+    <div class="mlab">${days.map(d => `<span>${[0, 4, 11, 18, 25, 30].includes(d) ? d + 1 : ''}</span>`).join('')}</div></div></div>
+    <div class="sectl">October so far <span>by tag</span></div>${legend(totals(0, TODAY))}`;
+}
+const A = [
+  frame('Week', 'Light', 'light', 'Oct 19 – 25', 'Week', aWeek(), [
+    'Seven Day rails side by side, positioned by clock time (00 at top), so the shape of the week shows: when you woke, worked, slept. Hairlines at 06, 12, 18.',
+    'Totals are a quiet chip row under the grid. Tap a column to open that day.']),
+  frame('Week', 'Dark', 'dark', 'Oct 19 – 25', 'Week', aWeek(), [
+    'Dark uses the stored palette hex as-is, same as the Day rail. Hatched gaps on Thu–Sun are the blocks still waiting for a label.']),
+  frame('Month', 'Light', 'light', '<i class="today"></i>October', 'Month', aMonth(), [
+    'Same grid squeezed to 31 thin rails: a barcode of the month. Late nights, weekends and missed labeling jump out without a single number.',
+    'Today ends at a pulsing now-dot; future days are empty outlines.']),
+];
+
+// ---- B · Totals ----
+function bBody(d0, d1, prev, focus, noUnl) {
+  const t = totals(d0, d1), all = Object.values(t).reduce((a, b) => a + b, 0), unl = t.null || 0, rk = ranked(t), max = rk[0][1];
+  const p = prev && totals(...prev), days = d1 - d0 + 1;
+  const right = (g, m) => {
+    if (!p) return `${fmtH(m / days)}/day`;
+    const dl = m - (p[g] || 0);
+    return Math.abs(dl) < 5 ? 'same' : `<span class="ms">${dl > 0 ? 'arrow_drop_up' : 'arrow_drop_down'}</span>${fmtH(Math.abs(dl))}`;
+  };
+  const row = (g, m) => `<div class="tr ${g === 'null' ? 'ul' : cls(g)}${g === focus ? ' sel' : ''}"><div class="l1"><i class="${g === 'null' ? 'u-dot' : ''}"></i>${g === 'null' ? 'Unlabeled' : g}<span class="tot">${fmtH(m)}</span></div>
+    <div class="l2"><div class="bar"><i class="${g === 'null' ? 'hatch' : ''}" style="width:${m / max * 100}%"></i></div><span class="dl">${right(g, m)}</span></div></div>`;
+  return { t, rk, all, unl,
+    hero: `<div class="hero"><div><div class="pct">${Math.floor((1 - unl / all) * 100)}<small>%</small></div><div class="pl">labeled</div></div>
+      <div class="hu"><b>${fmtH(unl)}</b> unlabeled<br>in ${unlCount(d0, d1)} blocks</div><button class="pill"><span class="ms">sell</span>Label</button></div>`,
+    stack: `<div class="stack">${rk.map(([g, m]) => `<i class="${cls(g)}" style="flex:${m}"></i>`).join('')}${unl ? `<i class="u" style="flex:${unl}"></i>` : ''}</div>`,
+    rows: `<div class="trs">${rk.map(([g, m]) => row(g, m)).join('')}${unl && !noUnl ? row('null', unl) : ''}</div>` };
+}
+function bWeek() { const b = bBody(...WEEK, PREV); return b.hero + b.stack + b.rows; }
+function bMonth() {
+  const b = bBody(0, TODAY), weeks = [[0, 3, 'Oct 1'], [4, 10, '5'], [11, 17, '12'], [18, 24, '19'], [25, 25, '26']];
+  const cols = weeks.map(([a, z, lab], i) => {
+    const t = totals(a, z), sum = Object.values(t).reduce((x, y) => x + y, 0);
+    return `<div class="wk ${i === 4 ? 'cur' : ''}"><div class="col" style="height:${sum / (7 * D) * 64}px">${b.rk.map(([g]) => t[g] ? `<i class="${cls(g)}" style="flex:${t[g]}"></i>` : '').join('')}${t.null ? `<i class="u" style="flex:${t.null}"></i>` : ''}</div><span>${lab}</span></div>`;
+  }).join('');
+  return b.hero + `<div class="wks">${cols}</div>` + b.rows.replace('class="trs"', 'class="trs tight"');
+}
+const Bc = [
+  frame('Week', 'Light', 'light', 'Oct 19 – 25', 'Week', bWeek(), [
+    'Every minute belongs to some block, so "hours tracked" is always 24 × days. The one number that changes is how much is labeled; it leads, with a shortcut to label the rest.',
+    'Ranked tag list, Settings-style grouped rows. Change vs the previous week is neutral grey: no tag is good or bad by default.']),
+  frame('Week', 'Dark', 'dark', 'Oct 19 – 25', 'Week', bWeek(), [
+    'The stacked bar under the hero is the whole week in one line; the list explains it.']),
+  frame('Month', 'Light', 'light', '<i class="today"></i>October', 'Month', bMonth(), [
+    'Weekly columns show the month\'s mix and how far each week is labeled; partial weeks (Oct 1–4, today) are shorter.',
+    'No previous-month comparison yet (no September data in the sample), so rows show a per-day average.']),
+];
+
+// ---- C · Calendar ----
+function cWeek() {
+  return `<div class="hx"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div><div class="dcs">${[18, 19, 20, 21, 22, 23, 24].map(d => {
+    const n = unlCount(d, d), top = ranked(totals(d, d)).slice(0, 3);
+    return `<div class="dc"><div class="dh"><b>${DOW[dow(d)]}</b><span>Oct ${d + 1}</span><span class="sp"></span>${n ? `<span class="ub">${n} unlabeled</span>` : '<span class="ms f ok">check_circle</span>'}</div>
+      <div class="strip h">${hsegs(d)}</div><div class="top">${top.map(([g, m]) => `<span class="${cls(g)}"><i></i>${g} ${fmtH(m)}</span>`).join('')}</div></div>`;
+  }).join('')}</div>`;
+}
+function donut(d) {
+  const t = totals(d, d); let at = 0;
+  const parts = ['Sleep', 'Breakfast', 'Commute', 'Work', 'Lunch', 'Exercise', 'Reading', 'null'].filter(g => t[g]).map(g => {
+    const a = at, z = at += t[g] / D * 100;
+    return `${g === 'null' ? 'var(--outline-var)' : `var(--tag-${g})`} ${a}% ${z}%`;
+  });
+  return `<i class="donut" style="background:conic-gradient(${parts.join(',')}${at < 100 ? `,transparent ${at}% 100%` : ''})"></i>`;
+}
+function cMonth() {
+  const cells = [...Array(35).keys()].map(i => {
+    const d = i - 3, out = d < 0 || d > 30, num = d < 0 ? 28 + i : d > 30 ? d - 30 : d + 1;
+    return `<div class="cc ${out ? 'out' : ''} ${d > TODAY && !out ? 'fut' : ''} ${d === TODAY ? 'today' : ''}"><span class="cn">${num}</span>
+      ${d >= 0 && d <= TODAY ? donut(d) : ''}${d >= 0 && d <= TODAY && unlCount(d, d) ? '<i class="udot"></i>' : ''}</div>`;
+  }).join('');
+  return `<div class="cal">${'MTWTFSS'.split('').map(c => `<span class="wd">${c}</span>`).join('')}${cells}</div>
+    <div class="sectl">October so far <span>by tag</span></div>${legend(totals(0, TODAY))}
+    <button class="review"><span class="ms">sell</span>Label ${unlCount(0, TODAY)} unlabeled blocks</button>`;
+}
+// donut needs the tag rail colour by name
+document.head.insertAdjacentHTML('beforeend', `<style>.cal{${['Sleep:pur', 'Breakfast:yel', 'Commute:org', 'Work:blu', 'Lunch:grn', 'Exercise:red', 'Reading:tea']
+  .map(p => p.split(':')).map(([g, c]) => `--tag-${g}:var(--r-${c})`).join(';')}}</style>`);
+const Cc = [
+  frame('Week', 'Light', 'light', 'Oct 19 – 25', 'Week', cWeek(), [
+    'The Day list, one card per day: a 24-hour strip, the day\'s top three tags, and a dashed badge counting what is still unlabeled.',
+    'Closest to today\'s app: reads like a list, not a chart. A check means the day is fully labeled.']),
+  frame('Week', 'Dark', 'dark', 'Oct 19 – 25', 'Week', cWeek(), [
+    'Tap a card to open that day; the badge takes you to its first unlabeled block.']),
+  frame('Month', 'Light', 'light', '<i class="today"></i>October', 'Month', cMonth(), [
+    'A familiar month calendar. Each day is a ring of its tag mix starting at midnight; grey slices and the corner dot mark unlabeled time. Today\'s ring is open: it stops at 14:44.',
+    'One button at the bottom works through every unlabeled block of the month.']),
+];
+
+// ---- D · Hybrid: A's rhythm grid as the header, B's ranked list underneath; tapping a row isolates that tag in the grid ----
+function dBody(month, focus) {
+  const [d0, d1] = month ? [0, TODAY] : WEEK, H = month ? 196 : 206, b = bBody(d0, d1, month ? null : PREV, focus, true);  // the labeled line below stands in for the Unlabeled row
+  const days = month ? [...Array(31).keys()] : [18, 19, 20, 21, 22, 23, 24];
+  const grid = `<div class="aw"><div style="padding-top:${month ? 22 : 34}px">${axis(H)}</div><div>
+    <div class="cols" style="--n:${days.length};--gap:${month ? 3 : 6}px;--r:${month ? 4 : 10}px;--chh:${month ? 22 : 34}px">${days.map(d => `<div>
+      <div class="ch ${dow(d) > 4 ? 'we' : ''}"><b>${month ? (dow(d) ? '' : 'M') : 'MTWTFSS'[dow(d)]}</b>${month ? '' : d + 1}</div>
+      <div class="track ${d > TODAY ? 'fut' : ''}" style="height:${H}px">${d <= TODAY ? vsegs(d, H, focus) : ''}</div></div>`).join('')}</div>
+    ${month ? `<div class="mlab">${days.map(d => `<span>${[0, 4, 11, 18, 25, 30].includes(d) ? d + 1 : ''}</span>`).join('')}</div>` : ''}</div></div>`;
+  const name = focus === 'null' ? 'Unlabeled' : focus;
+  const head = focus
+    ? `<div class="focus"><span class="ms">filter_alt</span>Showing ${name} only<button class="x"><span class="ms">close</span>Clear</button></div>`
+    : `<div class="hrow"><b>${Math.floor((1 - b.unl / b.all) * 100)}%</b>labeled · ${fmtH(b.unl)} left<button class="pill"><span class="ms">sell</span>Label</button></div>`;
+  return grid + head + b.rows.replace('class="trs"', 'class="trs tight"') + '<div class="more"></div>';
+}
+const Dc = [
+  frame('Week', 'Light', 'light', 'Oct 19 – 25', 'Week', dBody(false), [
+    'Top half is A\'s rhythm grid, shrunk to ~210&nbsp;px: still enough to see wake-up, the work day and late nights. Bottom half is B\'s ranked list with change vs last week. The screen scrolls; the grid scrolls away with it.',
+    'B\'s big "% labeled" hero shrinks to one line between the two halves, and replaces the Unlabeled row: tap it to see where the gaps are.']),
+  frame('Week', 'Dark · Work tapped', 'dark', 'Oct 19 – 25', 'Week', dBody(false, 'Work'), [
+    'The glue between the halves: tap a tag row and the grid fades every other tag, so the Work total turns into <i>when</i> that Work happened. Tap again or Clear to reset.',
+    'This is what neither A nor B can do alone: amount and timing for the same tag on one screen.']),
+  frame('Month', 'Light', 'light', '<i class="today"></i>October', 'Month', dBody(true), [
+    'Month uses the same layout with 31 thin rails. No previous month in the sample, so rows show a per-day average instead of a change.']),
+  frame('Month', 'Light · % labeled tapped', 'light', '<i class="today"></i>October', 'Month', dBody(true, 'null'), [
+    'Tapping the "% labeled" line (it doubles as the Unlabeled row) turns the grid into a to-do map: the hatched slivers are exactly the blocks still waiting for a tag, mostly the last few days.',
+    'Tapping a column still opens that day in Day view, ready to label.']),
+];
+
+const cand = (letter, name, tag, desc, frames) => `<section class="cand"><div class="chead"><span class="letter">${letter}</span>
+  <h2>${name}<small>${tag}</small></h2><p>${desc}</p></div><div class="frames">${frames.join('')}</div></section>`;
+document.getElementById('out').innerHTML =
+  cand('A', 'Rhythm', 'when did time go', '<b>The Day rail, repeated.</b> Week and Month are grids of clock-positioned rails, so patterns in <i>when</i> things happen are visible at a glance. Totals are secondary. Strongest visual continuity with the shipped Day screen; weakest at "how many hours of X".', A) +
+  cand('B', 'Totals', 'how much went where', '<b>A ranked ledger of tags.</b> Leads with labeling progress, then total time per tag with change vs the previous period. Answers "how much Work this week" directly; says nothing about when in the day it happened.', Bc) +
+  cand('C', 'Calendar', 'one day at a time', '<b>The familiar shapes.</b> Week is a list of day cards; Month is a classic calendar of tag-mix rings. Easiest to navigate and to find days that still need labels; least precise for comparing amounts.', Cc) +
+  cand('D', 'Hybrid A + B', 'when and how much', '<b>A on top, B underneath, linked by tap.</b> The rhythm grid answers <i>when</i>, the ranked list answers <i>how much</i>, and tapping a tag in the list highlights only that tag in the grid. The cost: both halves get smaller, and the screen scrolls.', Dc);
+</script>
+</body>
+</html>
