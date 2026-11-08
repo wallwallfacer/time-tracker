@@ -233,8 +233,8 @@ private fun DayRail(col: DayColumn, state: OverviewState, rails: Map<String, Col
             val y = size.height * k / 4
             drawLine(scheme.surface.copy(alpha = 0.7f), Offset(0f, y), Offset(size.width, y), 1f)
         }
-        col.blocks.lastOrNull()?.takeIf { it.block.isCurrent }?.let {
-            val center = Offset(size.width / 2, y(it.visibleEnd).coerceAtMost(size.height - 5.dp.toPx()))
+        col.nowAt?.let {
+            val center = Offset(size.width / 2, y(it).coerceAtMost(size.height - 5.dp.toPx()))
             drawCircle(scheme.surface, 6.dp.toPx(), center)
             drawCircle(scheme.primary, 4.dp.toPx(), center)
         }

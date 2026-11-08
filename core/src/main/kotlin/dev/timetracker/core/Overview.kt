@@ -26,7 +26,10 @@ fun stepAnchor(mode: ViewMode, anchor: LocalDate, delta: Int): LocalDate = when 
 }
 
 /** One calendar day of a period, `[start, end)` in epoch ms (23 h or 25 h on DST days), with its visible blocks. */
-data class DayColumn(val date: LocalDate, val start: Long, val end: Long, val blocks: List<ClippedBlock>)
+data class DayColumn(val date: LocalDate, val start: Long, val end: Long, val blocks: List<ClippedBlock>) {
+    /** Now, when it falls in this day; null on earlier days the still-open current block also covers. */
+    val nowAt: Long? get() = blocks.lastOrNull()?.takeIf { it.block.isCurrent && it.visibleEnd == it.block.endAt }?.visibleEnd
+}
 
 /**
  * A week or month summary. [totals] and [previous] map tagId to ms, the `null` key holding unlabeled time.

@@ -86,6 +86,13 @@ class OverviewTest {
         assertEquals(25 * hour, sunday.end - sunday.start)
     }
 
+    @Test fun `now marker only on the column that contains now`() {
+        val now = ms(10, 22, 7)
+        val o = overview(listOf(p("s", ms(10, 21, 23), "sleep")), ViewMode.WEEK, date(10, 22), zone, now)
+        assertNull(o.days.single { it.date == date(10, 21) }.nowAt)
+        assertEquals(now, o.days.single { it.date == date(10, 22) }.nowAt)
+    }
+
     @Test fun `future days are empty columns`() {
         val o = overview(listOf(p("a", ms(10, 1, 0), "a")), ViewMode.MONTH, date(10, 26), zone, ms(10, 26, 12))
         assertEquals(31, o.days.size)
