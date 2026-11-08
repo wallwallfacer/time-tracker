@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.Wearable
 import dev.timetracker.core.LaunchDecision
+import dev.timetracker.core.previousPoint
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,10 +61,14 @@ class MarkActivity : ComponentActivity() {
         // The write runs on a process-wide scope so rotation/finish never cancels it.
         // The lambda captures only the locals above, never the activity.
         val outcome = MarkScope.async {
-            // A failing store read degrades to "no previous point"; it must never block the send.
-            val prev = runCatching { store.get() } // read before updating
+            // A failing read degrades to "no previous point"; it must never block the send.
+            val stored = runCatching { store.get() } // read before updating
                 .onFailure { Log.w(TAG, "Failed to read latest point", it) }
                 .getOrNull()
+            val synced = runCatching { syncedLatest(dataClient) }
+                .onFailure { Log.w(TAG, "Failed to read synced /latest", it) }
+                .getOrNull()
+            val prev = previousPoint(now, stored, synced)
             val sent = try {
                 PointSender.send(dataClient, now, id)
                 true
@@ -85,6 +90,14 @@ class MarkActivity : ComponentActivity() {
             shown = result
             finishJob?.cancel()
             finishJob = launch {
+                // The watch often wakes on this press, so a phone mark may sync in only now: correct the line live.
+                launch {
+                    store.latest.collect { at ->
+                        val current = shown ?: return@collect
+                        val prev = previousPoint(current.now, current.prev, at)
+                        if (current.recorded && prev != current.prev) shown = Shown(current.now, prev, true)
+                    }
+                }
                 delay(3000)
                 finishAndRemoveTask()
             }

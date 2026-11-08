@@ -17,13 +17,16 @@ import androidx.wear.watchface.complications.data.TimeDifferenceStyle
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
+import com.google.android.gms.wearable.Wearable
 import java.time.Instant
 
 /** Shows the time since the latest known point; tapping it opens [MarkActivity], which records a point. */
 class ElapsedComplicationService : SuspendingComplicationDataSourceService() {
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
         if (request.complicationType != ComplicationType.SHORT_TEXT) return null
-        val latest = runCatching { LatestStore(applicationContext).get() }.getOrNull()
+        val stored = runCatching { LatestStore(applicationContext).get() }.getOrNull()
+        val synced = runCatching { syncedLatest(Wearable.getDataClient(applicationContext)) }.getOrNull()
+        val latest = listOfNotNull(stored, synced).maxOrNull()
         // The system renders a counting-up text, so the value never freezes between updates.
         val text = if (latest != null) {
             TimeDifferenceComplicationText.Builder(
