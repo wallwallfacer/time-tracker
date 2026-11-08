@@ -44,4 +44,7 @@
     <string name="clear">Clear</string>
     <string name="nothing_recorded">Nothing recorded</string>
     <string name="delta_same">same</string>
+    <string name="change_color">Change color</string>
+    <string name="tag_color_title">Color for %1$s</string>
+    <string name="tag_color_help">Names show which other tags use a color.</string>
 </resources>

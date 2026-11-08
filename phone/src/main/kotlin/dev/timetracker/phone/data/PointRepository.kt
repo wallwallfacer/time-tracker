@@ -12,9 +12,29 @@ object TagPalette {
     val colors: List<Int> = listOf(
         0xFFE57373.toInt(), 0xFFFFB74D.toInt(), 0xFFFFF176.toInt(), 0xFF81C784.toInt(),
         0xFF4DB6AC.toInt(), 0xFF64B5F6.toInt(), 0xFF9575CD.toInt(), 0xFFF06292.toInt(),
+        // 24 more, picked by script to stay as far apart as possible (OKLab) from the 8 above and each other in both
+        // themes; most distinct first, so new tags spread out before similar shades are used.
+        0xFFF277FE.toInt(), 0xFFE5BBE1.toInt(), 0xFF9ED3F2.toInt(), 0xFFA3745B.toInt(),
+        0xFFADA3FF.toInt(), 0xFFB5D6AA.toInt(), 0xFFFD80C4.toInt(), 0xFFAD75FE.toInt(),
+        0xFFFA6004.toInt(), 0xFFF8AAFF.toInt(), 0xFF7E7AA8.toInt(), 0xFFF3909D.toInt(),
+        0xFF3A74FF.toInt(), 0xFF86F8CF.toInt(), 0xFF088BBE.toInt(), 0xFFAC731A.toInt(),
+        0xFF6E8D35.toInt(), 0xFFFE5166.toInt(), 0xFFE0C796.toInt(), 0xFF718FFF.toInt(),
+        0xFF6CF6FB.toInt(), 0xFF5B7EC8.toInt(), 0xFFF19773.toInt(), 0xFFA26F83.toInt(),
     )
 
-    fun next(existing: Int): Int = colors[existing % colors.size]
+    /** The palette ordered by hue, so the picker reads as a spectrum. */
+    val byHue: List<Int> = colors.sortedBy { hue(it) }
+
+    private fun hue(argb: Int): Float {
+        val r = (argb shr 16 and 0xFF) / 255f; val g = (argb shr 8 and 0xFF) / 255f; val b = (argb and 0xFF) / 255f
+        val max = maxOf(r, g, b); val d = max - minOf(r, g, b)
+        if (d == 0f) return 0f
+        val h = when (max) { r -> ((g - b) / d).mod(6f); g -> (b - r) / d + 2; else -> (r - g) / d + 4 }
+        return h * 60
+    }
+
+    /** The first palette color no tag uses yet; once all are taken, cycles by count. */
+    fun next(used: Collection<Int>): Int = colors.firstOrNull { it !in used } ?: colors[used.size % colors.size]
 }
 
 class PointRepository(private val db: AppDatabase, val clock: () -> Long = System::currentTimeMillis) {
@@ -48,7 +68,7 @@ class PointRepository(private val db: AppDatabase, val clock: () -> Long = Syste
     suspend fun createTag(name: String): Tag? {
         val trimmed = name.trim()
         if (tagDao.countByName(trimmed) > 0) return null
-        val color = TagPalette.next(tags.first().size)
+        val color = TagPalette.next(tags.first().map { it.color })
         return Tag(UUID.randomUUID().toString(), trimmed, color, clock()).also { tagDao.insert(it.toEntity()) }
     }
 
@@ -63,6 +83,8 @@ class PointRepository(private val db: AppDatabase, val clock: () -> Long = Syste
 
     /** Returns the number of points whose tag was cleared. */
     suspend fun deleteTag(id: String): Int = pointDao.clearTag(id).also { tagDao.delete(id) }
+
+    suspend fun setTagColor(id: String, color: Int) = tagDao.setColor(id, color)
 
     suspend fun countWithTag(tagId: String): Int = pointDao.countWithTag(tagId)
 

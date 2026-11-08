@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import dev.timetracker.core.Source
 import dev.timetracker.phone.data.AppDatabase
 import dev.timetracker.phone.data.PointRepository
+import dev.timetracker.phone.data.TagPalette
 import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -83,5 +84,24 @@ class SettingsViewModelTest {
         repo.tags.first { it.isEmpty() }
         assertTrue(repo.points.first { p -> p.all { it.tagId == null } }.isNotEmpty())
         assertNull(repo.points.first().first { it.id == "a" }.tagId)
+    }
+
+    @Test fun `setColor changes only that tag`() = runTest {
+        val work = repo.createTag("Work")!!
+        val play = repo.createTag("Play")!!
+        val picked = TagPalette.colors[20]
+        vm.setColor(work.id, picked)
+        advanceUntilIdle()
+        val tags = repo.tags.first { t -> t.any { it.color == picked } }.associateBy { it.id }
+        assertEquals(picked, tags.getValue(work.id).color)
+        assertEquals(play.color, tags.getValue(play.id).color)
+    }
+
+    @Test fun `new tag takes the first color no tag uses`() = runTest {
+        val a = repo.createTag("A")!!
+        repo.createTag("B")!!
+        repo.deleteTag(a.id)
+        assertEquals(TagPalette.colors[0], repo.createTag("C")!!.color)
+        assertEquals(TagPalette.colors[2], repo.createTag("D")!!.color)
     }
 }

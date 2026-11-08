@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.Flow
     @Insert suspend fun insert(t: TagEntity)
     @Query("UPDATE tags SET name = :name WHERE id = :id") suspend fun rename(id: String, name: String)
     @Query("UPDATE tags SET lastUsedAt = :at WHERE id = :id") suspend fun touch(id: String, at: Long)
+    @Query("UPDATE tags SET color = :color WHERE id = :id") suspend fun setColor(id: String, color: Int)
     @Query("DELETE FROM tags WHERE id = :id") suspend fun delete(id: String)
     @Query("SELECT COUNT(*) FROM tags WHERE LOWER(name) = LOWER(:name)") suspend fun countByName(name: String): Int
 }

@@ -4,6 +4,12 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -26,6 +33,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -44,10 +53,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.timetracker.core.Tag
 import dev.timetracker.phone.R
+import dev.timetracker.phone.data.TagPalette
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
@@ -66,6 +80,7 @@ fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
     val failedMessage = stringResource(R.string.export_failed)
     var renaming by remember { mutableStateOf<Tag?>(null) }
     var deleting by remember { mutableStateOf<Pair<Tag, Int>?>(null) }
+    var coloring by remember { mutableStateOf<Tag?>(null) }
 
     // The CSV is built after the picker returns, so it reflects the data at write time.
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
@@ -101,6 +116,7 @@ fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
                 TagItem(
                     tag,
                     shape = groupShape(i, tags.size),
+                    onColor = { coloring = tag },
                     onRename = { renaming = tag },
                     onDelete = { scope.launch { deleting = tag to vm.deleteCount(tag.id) } },
                 )
@@ -124,6 +140,16 @@ fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
         }
     }
 
+    coloring?.let { tag ->
+        ModalBottomSheet(
+            onDismissRequest = { coloring = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            TagColorSheetContent(tag, tags) { vm.setColor(tag.id, it); coloring = null }
+        }
+    }
     renaming?.let { tag ->
         RenameDialog(tag, onRename = { vm.rename(tag.id, it) }, onDismiss = { renaming = null })
     }
@@ -152,7 +178,7 @@ private fun groupShape(index: Int, count: Int): RoundedCornerShape {
 }
 
 @Composable
-private fun TagItem(tag: Tag, shape: RoundedCornerShape, onRename: () -> Unit, onDelete: () -> Unit) {
+private fun TagItem(tag: Tag, shape: RoundedCornerShape, onColor: () -> Unit, onRename: () -> Unit, onDelete: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val tones = tagTones(tag.color)
     Row(
@@ -160,7 +186,12 @@ private fun TagItem(tag: Tag, shape: RoundedCornerShape, onRename: () -> Unit, o
             .padding(start = 12.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(36.dp).clip(CircleShape).background(tones.container), contentAlignment = Alignment.Center) {
+        val changeColor = stringResource(R.string.change_color)
+        Box(
+            Modifier.size(36.dp).clip(CircleShape).background(tones.container)
+                .clickable(onClickLabel = changeColor, onClick = onColor).semantics { contentDescription = changeColor },
+            contentAlignment = Alignment.Center,
+        ) {
             Box(Modifier.size(14.dp).clip(CircleShape).background(tones.rail))
         }
         Text(tag.name, Modifier.weight(1f).padding(start = 12.dp), style = MaterialTheme.typography.titleMedium)
@@ -168,6 +199,56 @@ private fun TagItem(tag: Tag, shape: RoundedCornerShape, onRename: () -> Unit, o
         TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = scheme.error)) {
             Text(stringResource(R.string.delete))
         }
+    }
+}
+
+/** All palette swatches by hue, six per row; each shows the names of the other tags already using it. */
+@Composable
+internal fun TagColorSheetContent(tag: Tag, tags: List<Tag>, onPick: (Int) -> Unit) {
+    val usedBy = tags.filter { it.id != tag.id }.groupBy({ it.color }, { it.name })
+    Column(Modifier.verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 28.dp)) {
+        Text(stringResource(R.string.tag_color_title, tag.name), style = MaterialTheme.typography.titleLarge)
+        Text(
+            stringResource(R.string.tag_color_help),
+            Modifier.padding(top = 4.dp, bottom = 12.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        TagPalette.byHue.chunked(6).forEach { row ->
+            Row(Modifier.fillMaxWidth()) {
+                row.forEach { color ->
+                    Swatch(color, selected = color == tag.color, usedBy = usedBy[color]?.joinToString(", "), Modifier.weight(1f)) { onPick(color) }
+                }
+                repeat(6 - row.size) { Spacer(Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Swatch(color: Int, selected: Boolean, usedBy: String?, modifier: Modifier, onClick: () -> Unit) {
+    val tones = tagTones(color)
+    Column(
+        modifier.clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(vertical = 8.dp)
+            .semantics { this.selected = selected },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier.size(42.dp).clip(CircleShape).background(tones.container)
+                .then(if (selected) Modifier.border(2.5.dp, tones.rail, CircleShape) else Modifier),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (selected) Icon(Icons.Filled.Check, null, Modifier.size(22.dp), tint = tones.onContainer)
+            else Box(Modifier.size(16.dp).clip(CircleShape).background(tones.rail))
+        }
+        Text(
+            usedBy.orEmpty(),
+            Modifier.padding(top = 4.dp, start = 2.dp, end = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
