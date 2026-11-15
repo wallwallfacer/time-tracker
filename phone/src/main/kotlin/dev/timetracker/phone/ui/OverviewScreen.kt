@@ -90,7 +90,7 @@ fun OverviewScreen(
                 return@Column
             }
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 32.dp)) {
-                item { RhythmGrid(state, today, onOpenDay) }
+                item { LocalAppTheme.current.weekGrid(WeekGridArgs(state, today, onOpenDay)) }
                 if (state.overview.elapsedMs == 0L) {
                     item {
                         Text(
@@ -131,7 +131,7 @@ internal fun periodTitle(mode: ViewMode, anchor: LocalDate, today: LocalDate): S
 }
 
 @Composable
-private fun RhythmGrid(state: OverviewState, today: LocalDate, onOpenDay: (LocalDate) -> Unit) {
+internal fun RailWeekGrid(state: OverviewState, today: LocalDate, onOpenDay: (LocalDate) -> Unit) {
     val month = state.mode == ViewMode.MONTH
     val gridHeight = if (month) 196.dp else 206.dp
     val headerHeight = if (month) 18.dp else 34.dp

@@ -9,6 +9,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -21,6 +22,9 @@ import dev.timetracker.core.formatTime
 import dev.timetracker.phone.data.AppDatabase
 import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.sync.LatestPublisher
+import dev.timetracker.phone.ui.AppThemes
+import dev.timetracker.phone.ui.LocalAppTheme
+import dev.timetracker.phone.ui.ThemePrefs
 import java.time.ZoneId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +32,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /** Process-wide scope for capture DB work and publishing; outlives any single activity instance. */
 private object CaptureScope : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -44,7 +50,9 @@ class MarkPointActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         repo = PointRepository(AppDatabase.get(applicationContext))
         publisher = LatestPublisher(Wearable.getDataClient(applicationContext))
-        setContent { ConfirmOverlay(overlay) }
+        // Read once so the overlay wears the chosen theme; the activity is short-lived, so no live updates.
+        val theme = runBlocking { AppThemes.byId(ThemePrefs(applicationContext).themeId.first()) }
+        setContent { CompositionLocalProvider(LocalAppTheme provides theme) { ConfirmOverlay(overlay) } }
         if (LaunchDecision.shouldRecord(savedInstanceState == null, fromNewIntent = false)) record()
         else finishAndRemoveTask() // recreation: nothing to show, don't leave an invisible activity on top
     }

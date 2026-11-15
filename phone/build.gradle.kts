@@ -48,6 +48,7 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.play.services.wearable)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.datastore.preferences)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

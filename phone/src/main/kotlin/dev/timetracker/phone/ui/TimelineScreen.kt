@@ -79,7 +79,7 @@ fun TimelineScreen(
                 Snackbar(it, shape = RoundedCornerShape(16.dp), actionColor = MaterialTheme.colorScheme.inversePrimary)
             }
         },
-        floatingActionButton = { MarkButton(onMark) },
+        floatingActionButton = { LocalAppTheme.current.markButton(onMark) },
         floatingActionButtonPosition = FabPosition.Center,
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
@@ -87,6 +87,7 @@ fun TimelineScreen(
             val title = if (state.day == today) "${stringResource(R.string.today)} · ${state.day.format(SHORT_DAY)}" else state.day.format(OTHER_DAY)
             PeriodHeader(title, state.day == today, onPrev, onNext, onToday, onSettings)
             ModeSwitch(ViewMode.DAY, onMode)
+            if (!state.isEmpty) LocalAppTheme.current.dayHeader?.invoke(DayHeaderArgs(state, zone))
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 if (state.isEmpty) {
                     Text(
@@ -100,10 +101,12 @@ fun TimelineScreen(
                     // Bottom padding keeps the last row clear of the Mark button.
                     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = 4.dp, bottom = 112.dp)) {
                         items(state.rows, key = { it.block.block.start.id }) { row ->
-                            TimelineRowItem(
-                                row, zone,
-                                onClick = { onRowClick(row.block.block) },
-                                onLongClick = { onDeleteRow(row.block.block) },
+                            LocalAppTheme.current.timelineRow(
+                                TimelineRowArgs(
+                                    row, zone,
+                                    onClick = { onRowClick(row.block.block) },
+                                    onLongClick = { onDeleteRow(row.block.block) },
+                                ),
                             )
                         }
                     }
@@ -131,7 +134,7 @@ internal fun ModeSwitch(mode: ViewMode, onMode: (ViewMode) -> Unit) {
 }
 
 @Composable
-private fun MarkButton(onMark: () -> Unit) {
+internal fun RailMarkButton(onMark: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     ExtendedFloatingActionButton(
         onClick = onMark,

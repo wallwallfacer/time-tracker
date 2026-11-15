@@ -84,7 +84,7 @@ fun LabelSheet(block: Block, vm: LabelSheetViewModel, zone: ZoneId, onDeleteStar
 
     ModalBottomSheet(
         onDismissRequest = ::close,
-        shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp),
+        shape = LocalAppTheme.current.radii.sheet.let { RoundedCornerShape(topStart = it, topEnd = it) },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         LabelSheetContent(
@@ -209,7 +209,7 @@ fun LabelSheetContent(
     }
 }
 
-private val ChipShape = RoundedCornerShape(15.dp)
+private val ChipShape: RoundedCornerShape @Composable get() = RoundedCornerShape(LocalAppTheme.current.radii.chip)
 
 /** A large tonal boundary-time button; [onClick] null shows a fixed value ("now"). */
 @Composable

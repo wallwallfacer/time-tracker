@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -71,7 +72,14 @@ import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
+fun SettingsScreen(
+    vm: SettingsViewModel,
+    zone: ZoneId,
+    onBack: () -> Unit,
+    choice: ThemeChoice = ThemeChoice(RailTheme, ThemeMode.SYSTEM),
+    onTheme: (String) -> Unit = {},
+    onMode: (ThemeMode) -> Unit = {},
+) {
     val tags by vm.tags.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -111,6 +119,12 @@ fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp)) {
+            item {
+                Column(Modifier.padding(bottom = 18.dp)) {
+                    SectionLabel(stringResource(R.string.section_appearance))
+                    ThemePicker(choice, isSystemInDarkTheme(), onTheme, onMode)
+                }
+            }
             item { SectionLabel(stringResource(R.string.tags_label)) }
             itemsIndexed(tags, key = { _, tag -> tag.id }) { i, tag ->
                 TagItem(
@@ -144,7 +158,7 @@ fun SettingsScreen(vm: SettingsViewModel, zone: ZoneId, onBack: () -> Unit) {
         ModalBottomSheet(
             onDismissRequest = { coloring = null },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            shape = LocalAppTheme.current.radii.sheet.let { RoundedCornerShape(topStart = it, topEnd = it) },
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
             TagColorSheetContent(tag, tags) { vm.setColor(tag.id, it); coloring = null }

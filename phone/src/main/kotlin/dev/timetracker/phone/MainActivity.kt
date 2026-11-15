@@ -1,15 +1,19 @@
 package dev.timetracker.phone
 
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,16 +34,23 @@ import dev.timetracker.phone.data.AppDatabase
 import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.sync.LatestPublisher
 import dev.timetracker.phone.sync.PointItemConsumer
+import dev.timetracker.phone.ui.AppThemes
 import dev.timetracker.phone.ui.LabelSheet
 import dev.timetracker.phone.ui.LabelSheetViewModel
 import dev.timetracker.phone.ui.OverviewScreen
 import dev.timetracker.phone.ui.SettingsScreen
 import dev.timetracker.phone.ui.SettingsViewModel
+import dev.timetracker.phone.ui.ThemeChoice
+import dev.timetracker.phone.ui.ThemePrefs
+import dev.timetracker.phone.ui.ThemeViewModel
 import dev.timetracker.phone.ui.TimeTrackerTheme
+import dev.timetracker.phone.ui.resolveDark
 import dev.timetracker.phone.ui.TimelineScreen
 import dev.timetracker.phone.ui.TimelineViewModel
 import java.time.ZoneId
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
     private val zone = ZoneId.systemDefault()
@@ -77,6 +88,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val themeViewModel: ThemeViewModel by viewModels {
+        viewModelFactory {
+            initializer {
+                val prefs = ThemePrefs(applicationContext)
+                // Read once before the first frame so a saved theme does not flash Rail at startup.
+                val initial = runBlocking { ThemeChoice(AppThemes.byId(prefs.themeId.first()), prefs.mode.first()) }
+                ThemeViewModel(prefs, initial)
+            }
+        }
+    }
+
     override fun onStart() {
         super.onStart()
         lifecycleScope.launch {
@@ -87,14 +109,23 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Transparent system bars that follow the app's light/dark surface; every screen pads itself via Scaffold.
-        enableEdgeToEdge()
         setContent {
-            TimeTrackerTheme {
+            val choice by themeViewModel.choice.collectAsStateWithLifecycle()
+            val dark = resolveDark(choice.mode, choice.theme, isSystemInDarkTheme())
+            // Transparent system bars that follow the app's light/dark surface; every screen pads itself via Scaffold.
+            DisposableEffect(dark) {
+                val bars = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT) { dark }
+                enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
+                onDispose {}
+            }
+            TimeTrackerTheme(dark, choice.theme) {
                 var screen by rememberSaveable { mutableStateOf("timeline") }
                 if (screen == "settings") {
                     BackHandler { screen = "timeline" }
-                    SettingsScreen(settingsViewModel, zone, onBack = { screen = "timeline" })
+                    SettingsScreen(
+                        settingsViewModel, zone, onBack = { screen = "timeline" },
+                        choice = choice, onTheme = themeViewModel::setTheme, onMode = themeViewModel::setMode,
+                    )
                     return@TimeTrackerTheme
                 }
                 val mode by viewModel.mode.collectAsStateWithLifecycle()

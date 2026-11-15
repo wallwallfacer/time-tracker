@@ -38,25 +38,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import dev.timetracker.phone.R
+import dev.timetracker.phone.ui.LocalAppTheme
 import dev.timetracker.phone.ui.TimeTrackerTheme
 import dev.timetracker.phone.ui.tabular
 
 /** What the overlay shows; [previousBlock] is null when there was no earlier point. */
 data class OverlayState(val time: String, val previousBlock: String?)
 
-private val Ink = Color(0xFFE4E1E9)
-private val Accent = Color(0xFFBAC3FF)
-private val PillBg = Color(0xFF293CA0)
-private val PillInk = Color(0xFFDEE0FF)
 
 /** Dark over any wallpaper: a point drops onto a rail, then the time, "Recorded" and the block it closed. */
 @Composable
 fun ConfirmOverlay(state: OverlayState?) {
     if (state == null) return
-    TimeTrackerTheme(dark = true) {
+    TimeTrackerTheme(dark = true, theme = LocalAppTheme.current) {
         val type = MaterialTheme.typography
+        val scheme = MaterialTheme.colorScheme
+        val Ink = scheme.onBackground
+        val Accent = scheme.primary
+        val PillBg = scheme.primaryContainer
+        val PillInk = scheme.onPrimaryContainer
         Column(
-            modifier = Modifier.fillMaxSize().background(Color(0xCC0E0F18)),
+            modifier = Modifier.fillMaxSize().background(LocalAppTheme.current.scrim),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -91,17 +93,17 @@ fun ConfirmOverlay(state: OverlayState?) {
                     },
                     Modifier.padding(top = 14.dp),
                     style = type.bodyLarge,
-                    color = Color(0xFFC7C5D0),
+                    color = scheme.onSurfaceVariant,
                 )
             }
-            DrainBar(state, Modifier.padding(top = 40.dp))
+            DrainBar(state, Accent, Modifier.padding(top = 40.dp))
         }
     }
 }
 
 /** Empties over the 2 s the overlay stays up; a new press ([key]) refills it, matching the restarted finish timer. */
 @Composable
-private fun DrainBar(key: OverlayState, modifier: Modifier) {
+private fun DrainBar(key: OverlayState, Accent: Color, modifier: Modifier) {
     val left = remember { Animatable(1f) }
     LaunchedEffect(key) {
         left.snapTo(1f)

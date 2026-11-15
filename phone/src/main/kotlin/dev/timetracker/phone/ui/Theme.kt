@@ -1,11 +1,13 @@
 package dev.timetracker.phone.ui
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
@@ -27,7 +29,7 @@ val GoogleSansFlex = FontFamily(
 )
 
 // Fixed M3 tonal scheme from seed #4355B9; no dynamic color, so the rail and tag tones always match.
-private val LightColors = lightColorScheme(
+internal val RailLightColors = lightColorScheme(
     primary = Color(0xFF4355B9), onPrimary = Color.White,
     primaryContainer = Color(0xFFDEE0FF), onPrimaryContainer = Color(0xFF00105C),
     secondaryContainer = Color(0xFFE1E0F9), onSecondaryContainer = Color(0xFF191A2C),
@@ -42,7 +44,7 @@ private val LightColors = lightColorScheme(
     inverseSurface = Color(0xFF303036), inverseOnSurface = Color(0xFFF2EFF7), inversePrimary = Color(0xFFBAC3FF),
 )
 
-private val DarkColors = darkColorScheme(
+internal val RailDarkColors = darkColorScheme(
     primary = Color(0xFFBAC3FF), onPrimary = Color(0xFF08218A),
     primaryContainer = Color(0xFF293CA0), onPrimaryContainer = Color(0xFFDEE0FF),
     secondaryContainer = Color(0xFF444559), onSecondaryContainer = Color(0xFFE1E0F9),
@@ -57,10 +59,10 @@ private val DarkColors = darkColorScheme(
     inverseSurface = Color(0xFFE4E1E9), inverseOnSurface = Color(0xFF303036), inversePrimary = Color(0xFF4355B9),
 )
 
-private fun style(size: Int, weight: FontWeight, line: Int, tracking: Double = 0.0) =
+internal fun style(size: Int, weight: FontWeight, line: Int, tracking: Double = 0.0) =
     TextStyle(fontFamily = GoogleSansFlex, fontSize = size.sp, fontWeight = weight, lineHeight = line.sp, letterSpacing = tracking.em)
 
-private val AppTypography = Typography(
+internal val RailTypography = Typography(
     displayLarge = style(104, FontWeight.Medium, 104, -0.03),
     displayMedium = style(52, FontWeight.Medium, 56, -0.02),
     headlineMedium = style(32, FontWeight.SemiBold, 40, -0.01),
@@ -79,8 +81,15 @@ private val AppTypography = Typography(
 val TextStyle.tabular: TextStyle get() = copy(fontFeatureSettings = "tnum")
 
 @Composable
-fun TimeTrackerTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (dark) DarkColors else LightColors, typography = AppTypography, content = content)
+fun TimeTrackerTheme(dark: Boolean = isSystemInDarkTheme(), theme: AppTheme = RailTheme, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalAppTheme provides theme) {
+        MaterialTheme(
+            colorScheme = if (dark) theme.dark else theme.light,
+            typography = theme.typography,
+            shapes = theme.shapes,
+            content = content,
+        )
+    }
 }
 
 /** How one tag paints: [rail] for the timeline segment and dots, [container]/[onContainer] for its cards and chips. */
@@ -161,7 +170,10 @@ internal val DarkTones = mapOf(
 @Composable
 fun tagTones(color: Int): TagTones {
     val scheme = MaterialTheme.colorScheme
-    val dark = scheme.surface.luminance() < 0.5f
-    return (if (dark) DarkTones else LightTones)[color]
-        ?: Color(color).let { TagTones(it, lerp(it, scheme.surface, if (dark) 0.65f else 0.75f), scheme.onSurface) }
+    return LocalAppTheme.current.tones(color, scheme, scheme.surface.luminance() < 0.5f)
 }
+
+/** Rail's hand-tuned tones for the stored palette; any other colour is blended toward the surface. */
+internal fun railTones(color: Int, scheme: ColorScheme, dark: Boolean): TagTones =
+    (if (dark) DarkTones else LightTones)[color]
+        ?: Color(color).let { TagTones(it, lerp(it, scheme.surface, if (dark) 0.65f else 0.75f), scheme.onSurface) }

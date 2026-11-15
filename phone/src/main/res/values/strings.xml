@@ -47,4 +47,9 @@
     <string name="change_color">Change color</string>
     <string name="tag_color_title">Color for %1$s</string>
     <string name="tag_color_help">Names show which other tags use a color.</string>
+    <string name="section_appearance">Appearance</string>
+    <string name="mode_system">System</string>
+    <string name="mode_light">Light</string>
+    <string name="mode_dark">Dark</string>
+    <string name="dark_only_note">%1$s is always dark.</string>
 </resources>
