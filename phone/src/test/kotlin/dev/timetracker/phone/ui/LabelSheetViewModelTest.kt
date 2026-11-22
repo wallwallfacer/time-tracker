@@ -61,13 +61,32 @@ class LabelSheetViewModelTest {
         return deriveBlocks(repo.points.first(), now)
     }
 
-    @Test fun `applyTag sets start point tag`() = runTest {
+    @Test fun `toggleTag sets start point tag`() = runTest {
         val block = threeBlocks()[1]
         val tag = repo.createTag("Work")!!
-        vm.applyTag(block, tag.id)
+        vm.toggleTag(block, tag.id)
         val b = repo.points.first { p -> p.first { it.id == "b" }.tagId == tag.id }.first { it.id == "b" }
         assertEquals(tag.id, b.tagId)
         assertNull(repo.points.first().first { it.id == "a" }.tagId)
+    }
+
+    @Test fun `toggleTag on the current tag clears it`() = runTest {
+        repo.mark(Source.PHONE, 100, "a"); repo.mark(Source.PHONE, 200, "b")
+        val tag = repo.createTag("Work")!!
+        repo.setTag("a", tag.id)
+        val block = deriveBlocks(repo.points.first(), now)[0]
+        vm.toggleTag(block, tag.id)
+        assertNull(repo.points.first { p -> p.first { it.id == "a" }.tagId == null }.first { it.id == "a" }.tagId)
+    }
+
+    @Test fun `toggleTag on another tag replaces it`() = runTest {
+        repo.mark(Source.PHONE, 100, "a"); repo.mark(Source.PHONE, 200, "b")
+        val work = repo.createTag("Work")!!
+        val play = repo.createTag("Play")!!
+        repo.setTag("a", work.id)
+        val block = deriveBlocks(repo.points.first(), now)[0]
+        vm.toggleTag(block, play.id)
+        assertEquals(play.id, repo.points.first { p -> p.first { it.id == "a" }.tagId == play.id }.first { it.id == "a" }.tagId)
     }
 
     @Test fun `createAndApply rejects duplicate name`() = runTest {

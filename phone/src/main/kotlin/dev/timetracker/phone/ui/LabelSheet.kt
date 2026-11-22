@@ -93,7 +93,7 @@ fun LabelSheet(block: Block, vm: LabelSheetViewModel, zone: ZoneId, onDeleteStar
             onNoteBlur = ::saveNote,
             onEditStart = { edit = TimeEdit(block.start.at, { h, m -> vm.moveStart(block, h, m, zone) }) },
             onEditEnd = { edit = TimeEdit(block.endAt, { h, m -> vm.moveEnd(block, h, m, zone) }) },
-            onTag = { vm.applyTag(block, it.id); close() },
+            onTag = { vm.toggleTag(block, it.id); close() },
             onNewTag = { newTagOpen = true },
             onInsert = {
                 scope.launch {

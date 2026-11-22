@@ -29,9 +29,10 @@ class LabelSheetViewModel(
     val points: StateFlow<List<Point>> =
         repo.points.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    /** The label belongs to the block's start point. */
-    fun applyTag(block: Block, tagId: String?) {
-        viewModelScope.launch { repo.setTag(block.start.id, tagId) }
+    /** The label belongs to the block's start point; picking the tag it already has clears it. */
+    fun toggleTag(block: Block, tagId: String) {
+        val next = tagId.takeUnless { it == block.start.tagId }
+        viewModelScope.launch { repo.setTag(block.start.id, next) }
     }
 
     /** Returns false for a blank or duplicate name; otherwise creates the tag and applies it. */
