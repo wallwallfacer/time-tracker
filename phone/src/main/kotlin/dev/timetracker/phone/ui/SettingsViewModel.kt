@@ -3,19 +3,20 @@ package dev.timetracker.phone.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.timetracker.core.Tag
-import dev.timetracker.core.deriveBlocks
-import dev.timetracker.core.toCsv
+import dev.timetracker.core.fromCsv
+import dev.timetracker.phone.data.MergeResult
 import dev.timetracker.phone.data.PointRepository
+import dev.timetracker.phone.sync.LatestPublisher
 import java.time.ZoneId
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val repo: PointRepository,
     private val zone: ZoneId,
+    private val publisher: LatestPublisher? = null,
     private val clock: () -> Long,
 ) : ViewModel() {
     val tags: StateFlow<List<Tag>> =
@@ -37,6 +38,11 @@ class SettingsViewModel(
         viewModelScope.launch { repo.deleteTag(tagId) }
     }
 
-    suspend fun csv(): String =
-        toCsv(deriveBlocks(repo.points.first(), clock()), repo.tags.first().associateBy { it.id }, zone)
+    suspend fun csv(): String = repo.csv(zone, clock())
+
+    /** Merges an exported or backed-up CSV into the app; null when [csv] is not such a file. */
+    suspend fun restore(csv: String): MergeResult? {
+        val snapshot = fromCsv(csv) ?: return null
+        return repo.merge(snapshot).also { if (it.points > 0) publisher?.publish(repo.newestAt()) }
+    }
 }

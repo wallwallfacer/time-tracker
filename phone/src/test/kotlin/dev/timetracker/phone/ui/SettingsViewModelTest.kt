@@ -4,6 +4,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import dev.timetracker.core.Source
 import dev.timetracker.phone.data.AppDatabase
+import dev.timetracker.phone.data.MergeResult
 import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.data.TagPalette
 import java.time.ZoneOffset
@@ -54,9 +55,20 @@ class SettingsViewModelTest {
         repo.mark(Source.PHONE, 100, "a"); repo.mark(Source.PHONE, 200, "b")
         repo.setTag("a", work.id)
         val lines = vm.csv().trimEnd('\n').lines()
-        assertEquals("start_iso,end_iso,duration_sec,tag,note,source", lines[0])
+        assertEquals("start_iso,end_iso,duration_sec,tag,note,source,point_id,created_at_ms,tag_id,tag_color,tag_last_used_ms", lines[0])
         assertEquals(3, lines.size)
         assertTrue(lines[1].contains("Work"))
+    }
+
+    @Test fun `restore merges an export and rejects other files`() = runTest {
+        val work = repo.createTag("Work")!!
+        repo.mark(Source.PHONE, 100, "a"); repo.mark(Source.PHONE, 200, "b")
+        repo.setTag("a", work.id)
+        val csv = vm.csv()
+        repo.deletePoint("b")
+        assertEquals(MergeResult(points = 1, tags = 0), vm.restore(csv))
+        assertEquals(setOf("a", "b"), repo.points.first().map { it.id }.toSet())
+        assertNull(vm.restore("start_iso,end_iso,duration_sec,tag,note,source\n"))
     }
 
     @Test fun `rename rejects duplicate`() = runTest {

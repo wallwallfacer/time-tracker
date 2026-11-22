@@ -20,6 +20,7 @@ import dev.timetracker.core.Source
 import dev.timetracker.core.formatDuration
 import dev.timetracker.core.formatTime
 import dev.timetracker.phone.data.AppDatabase
+import dev.timetracker.phone.data.LocalBackup
 import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.sync.LatestPublisher
 import dev.timetracker.phone.ui.AppThemes
@@ -67,6 +68,7 @@ class MarkPointActivity : ComponentActivity() {
         finishJob?.cancel()
         val repo = repo
         val publisher = publisher
+        val app = applicationContext
         val now = repo.clock()
         // DB work and publish run on a process-wide scope so rotation/finish never cancels an in-flight insert.
         // The lambdas capture only the locals above, never the activity.
@@ -74,6 +76,7 @@ class MarkPointActivity : ComponentActivity() {
             val previous = repo.newestAt() // read before inserting
             repo.mark(Source.PHONE, at = now)
             CaptureScope.launch { publisher.publish(repo.newestAt()) } // best-effort, never delays feedback
+            LocalBackup.schedule(app)
             previous
         }
         lifecycleScope.launch {

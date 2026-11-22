@@ -5,6 +5,7 @@ import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
 import dev.timetracker.phone.data.AppDatabase
+import dev.timetracker.phone.data.LocalBackup
 import dev.timetracker.phone.data.PointRepository
 import kotlinx.coroutines.runBlocking
 
@@ -20,7 +21,10 @@ class PointListenerService : WearableListenerService() {
                 if (event.type != DataEvent.TYPE_CHANGED) continue
                 if (PointItemConsumer.consume(dataClient, repo, event.dataItem)) inserted = true
             }
-            if (inserted) LatestPublisher(dataClient).publish(repo.newestAt())
+            if (inserted) {
+                LatestPublisher(dataClient).publish(repo.newestAt())
+                LocalBackup.schedule(applicationContext)
+            }
         }
     }
 }
