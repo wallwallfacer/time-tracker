@@ -31,6 +31,7 @@ import dev.timetracker.core.Block
 import dev.timetracker.core.ViewMode
 import dev.timetracker.core.deriveBlocks
 import dev.timetracker.phone.data.AppDatabase
+import dev.timetracker.phone.data.LocalBackup
 import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.sync.LatestPublisher
 import dev.timetracker.phone.sync.PointItemConsumer
@@ -83,7 +84,10 @@ class MainActivity : ComponentActivity() {
     private val settingsViewModel: SettingsViewModel by viewModels {
         viewModelFactory {
             initializer {
-                SettingsViewModel(PointRepository(AppDatabase.get(applicationContext)), zone, System::currentTimeMillis)
+                SettingsViewModel(
+                    PointRepository(AppDatabase.get(applicationContext)), zone,
+                    LatestPublisher(Wearable.getDataClient(applicationContext)), System::currentTimeMillis,
+                )
             }
         }
     }
@@ -105,6 +109,11 @@ class MainActivity : ComponentActivity() {
             runCatching { PointItemConsumer.sweep(applicationContext) }
                 .onFailure { Log.w(TAG, "Failed to sweep leftover watch points", it) }
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        LocalBackup.schedule(applicationContext)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

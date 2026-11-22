@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao interface TagDao {
     @Query("SELECT * FROM tags ORDER BY lastUsedAt DESC") fun observeAll(): Flow<List<TagEntity>>
+    @Query("SELECT * FROM tags") suspend fun all(): List<TagEntity>
     @Insert suspend fun insert(t: TagEntity)
     @Query("UPDATE tags SET name = :name WHERE id = :id") suspend fun rename(id: String, name: String)
     @Query("UPDATE tags SET lastUsedAt = :at WHERE id = :id") suspend fun touch(id: String, at: Long)

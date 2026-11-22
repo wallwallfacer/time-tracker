@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -35,6 +36,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -86,6 +88,9 @@ fun SettingsScreen(
     val snackbar = remember { SnackbarHostState() }
     val exportedMessage = stringResource(R.string.export_done)
     val failedMessage = stringResource(R.string.export_failed)
+    val notBackupMessage = stringResource(R.string.restore_not_backup)
+    val restoreFailedMessage = stringResource(R.string.restore_failed)
+    val resources = context.resources
     var renaming by remember { mutableStateOf<Tag?>(null) }
     var deleting by remember { mutableStateOf<Pair<Tag, Int>?>(null) }
     var coloring by remember { mutableStateOf<Tag?>(null) }
@@ -106,6 +111,26 @@ fun SettingsScreen(
                 }
             }
             snackbar.showSnackbar(if (ok) exportedMessage else failedMessage)
+        }
+    }
+
+    // Merge, never replace: restoring can only add points and tags.
+    val restorePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val message = try {
+                val text = withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() }
+                }
+                val result = text?.let { vm.restore(it) }
+                if (result == null) notBackupMessage
+                else resources.getString(R.string.restore_done, result.points, result.tags)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w("SettingsScreen", "Restore failed", e)
+                restoreFailedMessage
+            }
+            snackbar.showSnackbar(message)
         }
     }
 
@@ -143,6 +168,13 @@ fun SettingsScreen(
                 ) {
                     Icon(Icons.Filled.KeyboardArrowDown, null)
                     Text(stringResource(R.string.export_csv), Modifier.padding(start = 8.dp), style = MaterialTheme.typography.titleMedium)
+                }
+                OutlinedButton(
+                    onClick = { restorePicker.launch(arrayOf("text/*", "application/csv", "application/octet-stream")) },
+                    Modifier.fillMaxWidth().padding(top = 10.dp).height(60.dp),
+                ) {
+                    Icon(Icons.Filled.KeyboardArrowUp, null)
+                    Text(stringResource(R.string.restore_csv), Modifier.padding(start = 8.dp), style = MaterialTheme.typography.titleMedium)
                 }
                 Text(
                     stringResource(R.string.export_help),

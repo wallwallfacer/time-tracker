@@ -14,7 +14,11 @@
     <string name="tags_label">Tags</string>
     <string name="last_used_first">last used first</string>
     <string name="section_data">Data</string>
-    <string name="export_help">Every point and label, one row per block.</string>
+    <string name="export_help">Every point, tag and color, one row per block. Restore reads it back and only adds what is missing. A copy is also kept in Download/TimeTracker for the last 3 days.</string>
+    <string name="restore_csv">Restore from CSV</string>
+    <string name="restore_done">Restored %1$d points and %2$d tags</string>
+    <string name="restore_not_backup">Not a Time Tracker export</string>
+    <string name="restore_failed">Restore failed</string>
     <string name="empty_hint">Press Mark, or bind the side button\'s double press to “Mark”.</string>
     <string name="deleted_point">Point deleted</string>
     <string name="undo">Undo</string>

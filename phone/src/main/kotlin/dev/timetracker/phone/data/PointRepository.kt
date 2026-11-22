@@ -1,8 +1,13 @@
 package dev.timetracker.phone.data
 
+import androidx.room.withTransaction
 import dev.timetracker.core.Point
+import dev.timetracker.core.Snapshot
 import dev.timetracker.core.Source
 import dev.timetracker.core.Tag
+import dev.timetracker.core.deriveBlocks
+import dev.timetracker.core.toCsv
+import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -89,4 +94,36 @@ class PointRepository(private val db: AppDatabase, val clock: () -> Long = Syste
     suspend fun countWithTag(tagId: String): Int = pointDao.countWithTag(tagId)
 
     suspend fun newestAt(): Long? = pointDao.newestAt()
+
+    /** Every point and tag as the CSV that export, backup and restore share. */
+    suspend fun csv(zone: ZoneId, now: Long = clock()): String =
+        toCsv(deriveBlocks(points.first(), now), tags.first().associateBy { it.id }, zone)
+
+    /**
+     * Adds what [snapshot] has and the app lacks, in one transaction; existing points and tags are kept as they are.
+     * A tag whose name the app already uses under another id is merged into that tag, so names stay unique.
+     */
+    suspend fun merge(snapshot: Snapshot): MergeResult = db.withTransaction {
+        val existing = tagDao.all()
+        val byId = existing.associateBy { it.id }
+        val byName = existing.associateBy { it.name.lowercase() }.toMutableMap()
+        val tagIds = HashMap<String, String>() // snapshot id -> id in the app
+        var tagsAdded = 0
+        for (tag in snapshot.tags) {
+            val match = byId[tag.id] ?: byName[tag.name.lowercase()]
+            if (match != null) {
+                tagIds[tag.id] = match.id
+            } else {
+                tag.toEntity().also { tagDao.insert(it); byName[tag.name.lowercase()] = it }
+                tagIds[tag.id] = tag.id
+                tagsAdded++
+            }
+        }
+        val pointsAdded = snapshot.points.count { p ->
+            pointDao.insertIgnore(p.copy(tagId = p.tagId?.let(tagIds::get)).toEntity()) != -1L
+        }
+        MergeResult(pointsAdded, tagsAdded)
+    }
 }
+
+data class MergeResult(val points: Int, val tags: Int)
