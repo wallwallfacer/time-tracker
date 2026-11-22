@@ -56,4 +56,7 @@
     <string name="mode_light">Light</string>
     <string name="mode_dark">Dark</string>
     <string name="dark_only_note">%1$s is always dark.</string>
+    <string name="section_side_button">Side button</string>
+    <string name="show_mark_icon">Show Mark icon</string>
+    <string name="mark_icon_help">A second home-screen icon that records a point and closes. Bind the side button\'s double press to it. Turning it off also removes it from the side-button picker.</string>
 </resources>

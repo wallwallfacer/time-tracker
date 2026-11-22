@@ -42,6 +42,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -64,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.timetracker.core.Tag
 import dev.timetracker.phone.R
+import dev.timetracker.phone.capture.MarkAlias
 import dev.timetracker.phone.data.TagPalette
 import java.time.LocalDate
 import java.time.ZoneId
@@ -94,6 +96,7 @@ fun SettingsScreen(
     var renaming by remember { mutableStateOf<Tag?>(null) }
     var deleting by remember { mutableStateOf<Pair<Tag, Int>?>(null) }
     var coloring by remember { mutableStateOf<Tag?>(null) }
+    var markShown by remember { mutableStateOf(MarkAlias.isShown(context)) }
 
     // The CSV is built after the picker returns, so it reflects the data at write time.
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
@@ -148,6 +151,21 @@ fun SettingsScreen(
                 Column(Modifier.padding(bottom = 18.dp)) {
                     SectionLabel(stringResource(R.string.section_appearance))
                     ThemePicker(choice, isSystemInDarkTheme(), onTheme, onMode)
+                }
+            }
+            item {
+                Column(Modifier.padding(bottom = 18.dp)) {
+                    SectionLabel(stringResource(R.string.section_side_button))
+                    SwitchItem(stringResource(R.string.show_mark_icon), markShown) {
+                        MarkAlias.setShown(context, it)
+                        markShown = it
+                    }
+                    Text(
+                        stringResource(R.string.mark_icon_help),
+                        Modifier.padding(start = 8.dp, top = 10.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
             item { SectionLabel(stringResource(R.string.tags_label)) }
@@ -221,6 +239,18 @@ private fun groupShape(index: Int, count: Int): RoundedCornerShape {
     val top = if (index == 0) 24.dp else 6.dp
     val bottom = if (index == count - 1) 24.dp else 6.dp
     return RoundedCornerShape(top, top, bottom, bottom)
+}
+
+@Composable
+private fun SwitchItem(text: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().height(58.dp).clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable { onChange(!checked) }.padding(start = 20.dp, end = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(text, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+        Switch(checked, onCheckedChange = null)
+    }
 }
 
 @Composable
