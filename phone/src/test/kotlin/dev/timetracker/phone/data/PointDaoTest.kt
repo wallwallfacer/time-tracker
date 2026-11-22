@@ -3,6 +3,7 @@ package dev.timetracker.phone.data
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import dev.timetracker.core.Point
+import dev.timetracker.core.SavedTag
 import dev.timetracker.core.Snapshot
 import dev.timetracker.core.Source
 import dev.timetracker.core.Tag
@@ -67,7 +68,7 @@ class PointDaoTest {
                 Point("c", 300, Source.MANUAL, "gy", "x", 3),
                 Point("d", 400, Source.PHONE, "missing", null, 4), // tag not in the file: unlabeled
             ),
-            tags = listOf(Tag("w2", "work", 1, 5), Tag("gy", "Gym", 0xFF81C784.toInt(), 6)),
+            tags = listOf(SavedTag("w2", "work", 5), SavedTag("gy", "Gym", 6)),
         )
         assertEquals(MergeResult(points = 3, tags = 1), repo.merge(snapshot))
         val points = repo.points.first().associateBy { it.id }
@@ -75,16 +76,19 @@ class PointDaoTest {
         assertEquals(work.id, points.getValue("b").tagId)
         assertEquals(Point("c", 300, Source.MANUAL, "gy", "x", 3), points["c"])
         assertNull(points.getValue("d").tagId)
-        assertEquals(setOf(work, Tag("gy", "Gym", 0xFF81C784.toInt(), 6)), repo.tags.first().toSet())
+        // Work keeps its color; the new Gym gets the next palette color, not one from the file.
+        assertEquals(setOf(work, Tag("gy", "Gym", TagPalette.next(listOf(work.color)), 6)), repo.tags.first().toSet())
         assertEquals(MergeResult(0, 0), repo.merge(snapshot)) // idempotent
     }
 
     @Test fun `csv round-trips into an empty database`() = runTest {
         val work = repo.createTag("Work")!!
         repo.createTag("Unused")
+        repo.setTagColor(work.id, TagPalette.colors[5]) // a picked color the export must not carry
         repo.mark(Source.WATCH, at = 100, id = "a"); repo.mark(Source.PHONE, at = 250, id = "b")
         repo.setTag("a", work.id); repo.setNote("a", "n, \"q\"")
-        val before = repo.points.first().toSet() to repo.tags.first().toSet()
+        fun Tag.withoutColor() = SavedTag(id, name, lastUsedAt)
+        val before = repo.points.first().toSet() to repo.tags.first().map { it.withoutColor() }.toSet()
         val csv = repo.csv(ZoneOffset.UTC)
 
         val other = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java)
@@ -92,7 +96,9 @@ class PointDaoTest {
         try {
             val fresh = PointRepository(other) { now }
             assertEquals(MergeResult(2, 2), fresh.merge(fromCsv(csv)!!))
-            assertEquals(before, fresh.points.first().toSet() to fresh.tags.first().toSet())
+            assertEquals(before, fresh.points.first().toSet() to fresh.tags.first().map { it.withoutColor() }.toSet())
+            // Colors come from the fresh phone's palette: the first two, in export order.
+            assertEquals(TagPalette.colors.take(2).toSet(), fresh.tags.first().map { it.color }.toSet())
         } finally {
             other.close()
         }

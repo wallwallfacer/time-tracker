@@ -102,11 +102,13 @@ class PointRepository(private val db: AppDatabase, val clock: () -> Long = Syste
     /**
      * Adds what [snapshot] has and the app lacks, in one transaction; existing points and tags are kept as they are.
      * A tag whose name the app already uses under another id is merged into that tag, so names stay unique.
+     * Existing tags keep their color; new ones get the next palette color, as [createTag] would give them.
      */
     suspend fun merge(snapshot: Snapshot): MergeResult = db.withTransaction {
         val existing = tagDao.all()
         val byId = existing.associateBy { it.id }
         val byName = existing.associateBy { it.name.lowercase() }.toMutableMap()
+        val usedColors = existing.mapTo(mutableListOf()) { it.color }
         val tagIds = HashMap<String, String>() // snapshot id -> id in the app
         var tagsAdded = 0
         for (tag in snapshot.tags) {
@@ -114,7 +116,8 @@ class PointRepository(private val db: AppDatabase, val clock: () -> Long = Syste
             if (match != null) {
                 tagIds[tag.id] = match.id
             } else {
-                tag.toEntity().also { tagDao.insert(it); byName[tag.name.lowercase()] = it }
+                val color = TagPalette.next(usedColors).also { usedColors += it }
+                TagEntity(tag.id, tag.name, color, tag.lastUsedAt).also { tagDao.insert(it); byName[tag.name.lowercase()] = it }
                 tagIds[tag.id] = tag.id
                 tagsAdded++
             }

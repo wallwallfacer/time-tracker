@@ -7,15 +7,19 @@ import java.time.format.DateTimeFormatter
 
 /**
  * The first six columns read well in a spreadsheet; the rest carry what a restore needs to rebuild every
- * point and tag exactly (ids, creation times, colors, tag order).
+ * point and tag (ids, creation times, tag order). Tag colors are left out: they are a phone setting, so a
+ * restore keeps the phone's colors and gives new tags palette colors.
  */
 private val COLUMNS = listOf(
     "start_iso", "end_iso", "duration_sec", "tag", "note", "source",
-    "point_id", "created_at_ms", "tag_id", "tag_color", "tag_last_used_ms",
+    "point_id", "created_at_ms", "tag_id", "tag_last_used_ms",
 )
 
+/** A tag as an export holds it: everything but its color. */
+data class SavedTag(val id: String, val name: String, val lastUsedAt: Long)
+
 /** Everything an export holds: enough to restore the app's data. */
-data class Snapshot(val points: List<Point>, val tags: List<Tag>)
+data class Snapshot(val points: List<Point>, val tags: List<SavedTag>)
 
 /**
  * Exports [blocks] (unclipped, in input order) as CSV, one row per block; the current block has an empty
@@ -24,7 +28,7 @@ data class Snapshot(val points: List<Point>, val tags: List<Tag>)
 fun toCsv(blocks: List<Block>, tags: Map<String, Tag>, zone: ZoneId): String {
     fun iso(ms: Long) = Instant.ofEpochMilli(ms).atZone(zone).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
     fun tagColumns(tag: Tag?) =
-        if (tag == null) listOf("", "", "") else listOf(tag.id, "#%08X".format(tag.color), tag.lastUsedAt.toString())
+        if (tag == null) listOf("", "") else listOf(tag.id, tag.lastUsedAt.toString())
     val rows = blocks.map { b ->
         val tag = b.start.tagId?.let { tags[it] }
         listOf(
@@ -46,7 +50,10 @@ fun toCsv(blocks: List<Block>, tags: Map<String, Tag>, zone: ZoneId): String {
     }
 }
 
-/** Reads a [toCsv] export back; null when the text is not one (an older export without ids included) or is malformed. */
+/**
+ * Reads a [toCsv] export back; null when the text is not one (an older export without ids included) or is malformed.
+ * Columns it does not know, such as the `tag_color` of earlier exports, are ignored.
+ */
 fun fromCsv(text: String): Snapshot? {
     val records = parseCsv(text)
     val header = records.firstOrNull() ?: return null
@@ -54,13 +61,13 @@ fun fromCsv(text: String): Snapshot? {
     if (index.values.any { it < 0 }) return null
     return try {
         val points = mutableListOf<Point>()
-        val tags = LinkedHashMap<String, Tag>()
+        val tags = LinkedHashMap<String, SavedTag>()
         for (record in records.drop(1)) {
             if (record.size == 1 && record[0].isEmpty()) continue // a blank line
             fun col(name: String) = record.getOrElse(index.getValue(name)) { "" }
             val tagId = col("tag_id").ifEmpty { null }
             if (tagId != null && tagId !in tags) {
-                tags[tagId] = Tag(tagId, col("tag"), col("tag_color").removePrefix("#").toLong(16).toInt(), col("tag_last_used_ms").toLong())
+                tags[tagId] = SavedTag(tagId, col("tag"), col("tag_last_used_ms").toLong())
             }
             val start = col("start_iso").ifEmpty { null } ?: continue // a tag-only row
             points += Point(

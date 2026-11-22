@@ -55,7 +55,7 @@ class SettingsViewModelTest {
         repo.mark(Source.PHONE, 100, "a"); repo.mark(Source.PHONE, 200, "b")
         repo.setTag("a", work.id)
         val lines = vm.csv().trimEnd('\n').lines()
-        assertEquals("start_iso,end_iso,duration_sec,tag,note,source,point_id,created_at_ms,tag_id,tag_color,tag_last_used_ms", lines[0])
+        assertEquals("start_iso,end_iso,duration_sec,tag,note,source,point_id,created_at_ms,tag_id,tag_last_used_ms", lines[0])
         assertEquals(3, lines.size)
         assertTrue(lines[1].contains("Work"))
     }

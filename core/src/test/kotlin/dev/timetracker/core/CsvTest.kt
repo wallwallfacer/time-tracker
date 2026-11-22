@@ -16,8 +16,8 @@ class CsvTest {
         Point(id, at, Source.WATCH, tag, note, at)
     private val breakfast = Tag("tg", "Breakfast", 0xFF64B5F6.toInt(), 7)
     private val tags = mapOf("tg" to breakfast)
-    private val header = "start_iso,end_iso,duration_sec,tag,note,source,point_id,created_at_ms,tag_id,tag_color,tag_last_used_ms\n"
-    private fun ids(id: String, at: Long) = "$id,$at,tg,#FF64B5F6,7"
+    private val header = "start_iso,end_iso,duration_sec,tag,note,source,point_id,created_at_ms,tag_id,tag_last_used_ms\n"
+    private fun ids(id: String, at: Long) = "$id,$at,tg,7"
 
     @Test fun `header and one row`() {
         val csv = toCsv(listOf(Block(p("a", t("07:10")), p("b", t("07:45")), t("07:45"))), tags, zone)
@@ -37,12 +37,12 @@ class CsvTest {
     }
     @Test fun `unknown tag is empty`() {
         val csv = toCsv(listOf(Block(p("a", t("07:10"), tag = "gone"), null, t("07:10"))), emptyMap(), zone)
-        assertEquals(header + "2026-10-25T07:10:00+08:00,,0,,,WATCH,a,${t("07:10")},,,\n", csv)
+        assertEquals(header + "2026-10-25T07:10:00+08:00,,0,,,WATCH,a,${t("07:10")},,\n", csv)
     }
     @Test fun `unused tag gets a tag-only row`() {
         val gym = Tag("gy", "Gym", 0xFF81C784.toInt(), 3)
         val csv = toCsv(listOf(Block(p("a", t("07:10")), null, t("07:10"))), tags + ("gy" to gym), zone)
-        assertEquals(",,,Gym,,,,,gy,#FF81C784,3", csv.trimEnd('\n').lines().last())
+        assertEquals(",,,Gym,,,,,gy,3", csv.trimEnd('\n').lines().last())
     }
     @Test fun `csv_uses_real_start_and_end_for_midnight_block`() {
         val start = ZonedDateTime.of(2026, 10, 25, 23, 0, 0, 0, zone).toInstant().toEpochMilli()
@@ -61,18 +61,25 @@ class CsvTest {
         val all = mapOf("tg" to breakfast, "gy" to gym)
         val back = fromCsv(toCsv(deriveBlocks(points, t("10:00")), all, zone))!!
         assertEquals(points, back.points)
-        assertEquals(all.values.toSet(), back.tags.toSet())
+        assertEquals(setOf(SavedTag("tg", "Breakfast", 7), SavedTag("gy", "Gym, \"daily\"", 3)), back.tags.toSet())
     }
     @Test fun `fromCsv reads CRLF line endings`() {
         val csv = toCsv(listOf(Block(p("a", t("07:10")), null, t("07:10"))), tags, zone).replace("\n", "\r\n")
         assertEquals(listOf(p("a", t("07:10"))), fromCsv(csv)!!.points)
     }
+    @Test fun `fromCsv reads an earlier export with tag_color and ignores it`() {
+        val old = "start_iso,end_iso,duration_sec,tag,note,source,point_id,created_at_ms,tag_id,tag_color,tag_last_used_ms\n" +
+            "2026-10-25T07:10:00+08:00,,0,Breakfast,,WATCH,a,${t("07:10")},tg,#FF64B5F6,7\n"
+        val back = fromCsv(old)!!
+        assertEquals(listOf(p("a", t("07:10"))), back.points)
+        assertEquals(listOf(SavedTag("tg", "Breakfast", 7)), back.tags)
+    }
     @Test fun `fromCsv rejects an export without ids`() {
         assertNull(fromCsv("start_iso,end_iso,duration_sec,tag,note,source\n2026-10-25T07:10:00+08:00,,0,,,WATCH\n"))
     }
     @Test fun `fromCsv rejects malformed rows and other files`() {
-        assertNull(fromCsv(header + "not-a-time,,0,,,WATCH,a,1,,,\n"))
-        assertNull(fromCsv(header + "2026-10-25T07:10:00+08:00,,0,,,NOPE,a,1,,,\n"))
+        assertNull(fromCsv(header + "not-a-time,,0,,,WATCH,a,1,,\n"))
+        assertNull(fromCsv(header + "2026-10-25T07:10:00+08:00,,0,,,NOPE,a,1,,\n"))
         assertNull(fromCsv(""))
         assertNull(fromCsv("hello world"))
     }
