@@ -3,6 +3,13 @@
 
     <uses-permission android:name="android.permission.VIBRATE" />
 
+    <!-- On phones with the China edition of the Wear OS app, the Data Layer is served by that app rather than
+         Google Play services. Without this, package visibility hides it and every Wearable call fails with
+         API_UNAVAILABLE (17), so watch points are never imported. -->
+    <queries>
+        <package android:name="com.google.android.wearable.app.cn" />
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
