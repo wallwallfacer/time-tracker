@@ -26,6 +26,11 @@ android {
         compose = true
     }
 
+    // Lists the translated locales for the system per-app language screen (Android 13+); see res/resources.properties.
+    androidResources {
+        generateLocaleConfig = true
+    }
+
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
@@ -41,6 +46,8 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
     implementation(libs.activity.compose)
+    // Per-app language (AppCompatDelegate.setApplicationLocales), back-ported below Android 13.
+    implementation(libs.appcompat)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.room.runtime)

@@ -61,6 +61,7 @@ import dev.timetracker.core.formatDuration
 import dev.timetracker.core.formatElapsed
 import dev.timetracker.core.formatTime
 import dev.timetracker.phone.R
+import dev.timetracker.phone.ui.appLocale
 import dev.timetracker.phone.ui.AppTheme
 import dev.timetracker.phone.ui.Radii
 import dev.timetracker.phone.ui.RailWeekGrid
@@ -228,9 +229,9 @@ private fun DuskRow(args: TimelineRowArgs) {
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    if (!current) Text(formatDuration(ms), style = MaterialTheme.typography.bodyMedium.tabular, color = ink.copy(alpha = 0.8f))
+                    if (!current) Text(formatDuration(ms, appLocale()), style = MaterialTheme.typography.bodyMedium.tabular, color = ink.copy(alpha = 0.8f))
                 }
-                if (current) LiveLine(formatElapsed(ms))
+                if (current) LiveLine(formatElapsed(ms, appLocale()))
             }
         }
     }

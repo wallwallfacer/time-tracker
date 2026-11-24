@@ -66,6 +66,7 @@ import dev.timetracker.core.formatDuration
 import dev.timetracker.core.formatElapsed
 import dev.timetracker.core.formatTime
 import dev.timetracker.phone.R
+import dev.timetracker.phone.ui.appLocale
 import dev.timetracker.phone.ui.AppTheme
 import dev.timetracker.phone.ui.Focus
 import dev.timetracker.phone.ui.Radii
@@ -73,12 +74,11 @@ import dev.timetracker.phone.ui.RailWeekGrid
 import dev.timetracker.phone.ui.TagTones
 import dev.timetracker.phone.ui.TimelineRowArgs
 import dev.timetracker.phone.ui.WeekGridArgs
+import dev.timetracker.phone.ui.dateFormat
 import dev.timetracker.phone.ui.railSize
 import dev.timetracker.phone.ui.stripes
 import dev.timetracker.phone.ui.tabular
 import dev.timetracker.phone.ui.tagTones
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 /** The few colours the scheme has no role for. */
 private object Sticker {
@@ -201,8 +201,6 @@ internal fun stickerTones(color: Int): TagTones {
 // ---- Slots ----
 
 private val CardShape = RoundedCornerShape(18.dp)
-private val COLUMN_DAY = DateTimeFormatter.ofPattern("EEE, MMM d", Locale.ENGLISH)
-private val STRIP_LABEL = DateTimeFormatter.ofPattern("EEE d", Locale.ENGLISH)
 
 /** Ink on paper; plain black on the dark ground, where ink would vanish. */
 @Composable
@@ -270,7 +268,7 @@ private fun StickerRow(args: TimelineRowArgs) {
         Column(Modifier.weight(1f).then(card), verticalArrangement = Arrangement.Center) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (current) {
-                    LiveLabel(formatElapsed(ms), Modifier.weight(1f))
+                    LiveLabel(formatElapsed(ms, appLocale()), Modifier.weight(1f))
                 } else {
                     Text(
                         args.row.tag?.name ?: stringResource(R.string.unlabeled),
@@ -279,7 +277,7 @@ private fun StickerRow(args: TimelineRowArgs) {
                         fontStyle = if (labeled) FontStyle.Normal else FontStyle.Italic,
                         color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
-                    Text(formatDuration(ms), style = sofia(20, 800, 24).tabular, color = ink)
+                    Text(formatDuration(ms, appLocale()), style = sofia(20, 800, 24).tabular, color = ink)
                 }
             }
             if (compressed) Text(stringResource(R.string.compressed), style = MaterialTheme.typography.bodySmall, color = ink)
@@ -326,6 +324,9 @@ private fun StickerWeekGrid(args: WeekGridArgs) {
     val scheme = MaterialTheme.colorScheme
     val tones = state.tagsById.mapValues { tagTones(it.value.color) }
     val shape = RoundedCornerShape(10.dp)
+    val locale = appLocale()
+    val columnDay = remember(locale) { dateFormat(locale, "EEEMMMd") }
+    val stripLabel = remember(locale) { dateFormat(locale, "EEEd") }
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
         state.overview.days.forEach { col ->
             val future = col.date > args.today
@@ -334,12 +335,12 @@ private fun StickerWeekGrid(args: WeekGridArgs) {
                     .fillMaxWidth()
                     .heightIn(min = 48.dp)
                     .clickable(enabled = !future) { args.onOpenDay(col.date) }
-                    .semantics { contentDescription = col.date.format(COLUMN_DAY) },
+                    .semantics { contentDescription = col.date.format(columnDay) },
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    col.date.format(STRIP_LABEL), Modifier.width(56.dp),
+                    col.date.format(stripLabel), Modifier.width(56.dp),
                     style = MaterialTheme.typography.labelMedium,
                     color = if (future) scheme.onSurfaceVariant else scheme.onSurface,
                 )

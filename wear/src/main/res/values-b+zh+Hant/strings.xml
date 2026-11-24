@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">時間追蹤</string>
+    <string name="recorded">已記錄</string>
+    <string name="not_recorded">未記錄</string>
+    <string name="previous_block">上一段 %1$s</string>
+    <string name="complication_description">距上次打點的時間。輕觸即可打點。</string>
+</resources>

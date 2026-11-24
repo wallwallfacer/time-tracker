@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -71,7 +72,7 @@ fun ConfirmScreen(now: Long, prev: Long?, recorded: Boolean) {
                 )
             }
             if (recorded && prev != null) {
-                val duration = formatDuration(now - prev)
+                val duration = formatDuration(now - prev, LocalConfiguration.current.locales[0])
                 val line = stringResource(R.string.previous_block, duration)
                 Text(
                     buildAnnotatedString {

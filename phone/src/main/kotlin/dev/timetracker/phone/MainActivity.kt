@@ -3,12 +3,12 @@ package dev.timetracker.phone
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -35,6 +35,7 @@ import dev.timetracker.phone.data.LocalBackup
 import dev.timetracker.phone.data.PointRepository
 import dev.timetracker.phone.sync.LatestPublisher
 import dev.timetracker.phone.sync.PointItemConsumer
+import dev.timetracker.phone.ui.AppLanguage
 import dev.timetracker.phone.ui.AppThemes
 import dev.timetracker.phone.ui.LabelSheet
 import dev.timetracker.phone.ui.LabelSheetViewModel
@@ -53,7 +54,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-class MainActivity : ComponentActivity() {
+/** AppCompatActivity so the in-app language applies below Android 13 too. */
+class MainActivity : AppCompatActivity() {
     private val zone = ZoneId.systemDefault()
 
     private val viewModel: TimelineViewModel by viewModels {
@@ -134,6 +136,7 @@ class MainActivity : ComponentActivity() {
                     SettingsScreen(
                         settingsViewModel, zone, onBack = { screen = "timeline" },
                         choice = choice, onTheme = themeViewModel::setTheme, onMode = themeViewModel::setMode,
+                        language = remember { AppLanguage.chosen() }, onLanguage = AppLanguage::choose,
                     )
                     return@TimeTrackerTheme
                 }

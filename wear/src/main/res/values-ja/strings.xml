@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">タイムトラッカー</string>
+    <string name="recorded">記録しました</string>
+    <string name="not_recorded">記録できませんでした</string>
+    <string name="previous_block">前のブロック %1$s</string>
+    <string name="complication_description">前回のマークからの経過時間。タップしてマーク。</string>
+</resources>

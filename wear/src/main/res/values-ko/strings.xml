@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">타임 트래커</string>
+    <string name="recorded">기록됨</string>
+    <string name="not_recorded">기록되지 않음</string>
+    <string name="previous_block">이전 블록 %1$s</string>
+    <string name="complication_description">마지막 기록 이후 경과 시간. 탭하여 기록.</string>
+</resources>

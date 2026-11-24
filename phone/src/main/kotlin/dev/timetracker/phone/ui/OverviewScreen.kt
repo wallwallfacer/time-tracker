@@ -28,6 +28,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,14 +50,10 @@ import dev.timetracker.phone.R
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.abs
 
-private val MONTH_DAY = DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH)
-private val MONTH_NAME = DateTimeFormatter.ofPattern("MMMM", Locale.ENGLISH)
-private val COLUMN_DAY = DateTimeFormatter.ofPattern("EEE, MMM d", Locale.ENGLISH)
 private const val FIVE_MINUTES = 5 * 60_000L
 
 /** Week or Month: the rhythm grid on top, the labeled line, then tags ranked by time (spec §4). */
@@ -75,7 +72,7 @@ fun OverviewScreen(
     val today = LocalDate.now(zone)
     Scaffold { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
-            PeriodHeader(periodTitle(state.mode, state.anchor, today), state.isCurrent, onPrev, onNext, onCurrent, onSettings)
+            PeriodHeader(periodTitle(state.mode, state.anchor, today, appLocale()), state.isCurrent, onPrev, onNext, onCurrent, onSettings)
             ModeSwitch(state.mode, onMode)
             if (state.isEmpty) {
                 Box(Modifier.weight(1f).fillMaxWidth()) {
@@ -119,14 +116,12 @@ fun OverviewScreen(
     }
 }
 
-/** `Oct 19 – 25`, `Oct 26 – Nov 1`; `October`, or `October 2025` outside the current year. */
-internal fun periodTitle(mode: ViewMode, anchor: LocalDate, today: LocalDate): String {
+/** `Oct 19 – 25`, `Oct 26 – Nov 1`; `October`, or `October 2025` outside the current year; each in [locale]'s own form. */
+internal fun periodTitle(mode: ViewMode, anchor: LocalDate, today: LocalDate, locale: Locale): String {
     val start = periodStart(mode, anchor)
     return when (mode) {
-        ViewMode.WEEK -> start.plusDays(6).let { end ->
-            "${start.format(MONTH_DAY)} – ${if (end.month == start.month) end.dayOfMonth else end.format(MONTH_DAY)}"
-        }
-        else -> start.format(MONTH_NAME) + if (start.year != today.year) " ${start.year}" else ""
+        ViewMode.WEEK -> dateRange(locale, "MMMd", start, start.plusDays(6))
+        else -> start.format(dateFormat(locale, if (start.year != today.year) "yMMMM" else "MMMM"))
     }
 }
 
@@ -138,6 +133,8 @@ internal fun RailWeekGrid(state: OverviewState, today: LocalDate, onOpenDay: (Lo
     val scheme = MaterialTheme.colorScheme
     val rails = state.tagsById.mapValues { tagTones(it.value.color).rail }
     val label = MaterialTheme.typography.labelSmall.tabular
+    val locale = appLocale()
+    val columnDay = remember(locale) { dateFormat(locale, "EEEMMMd") }
     Row {
         Box(Modifier.width(22.dp).padding(top = headerHeight).height(gridHeight)) {
             listOf(0, 6, 12, 18, 24).forEach { h ->
@@ -156,7 +153,7 @@ internal fun RailWeekGrid(state: OverviewState, today: LocalDate, onOpenDay: (Lo
                     Column(
                         Modifier.weight(1f)
                             .clickable(enabled = !future) { onOpenDay(col.date) }
-                            .semantics { contentDescription = col.date.format(COLUMN_DAY) },
+                            .semantics { contentDescription = col.date.format(columnDay) },
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         ColumnHeader(col.date, month, headerHeight)
@@ -190,7 +187,7 @@ internal fun RailWeekGrid(state: OverviewState, today: LocalDate, onOpenDay: (Lo
 private fun ColumnHeader(date: LocalDate, month: Boolean, height: Dp) {
     val scheme = MaterialTheme.colorScheme
     val weekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
-    val initial = date.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.ENGLISH)
+    val initial = date.dayOfWeek.getDisplayName(TextStyle.NARROW, appLocale())
     Column(Modifier.height(height).padding(bottom = 4.dp), verticalArrangement = Arrangement.Bottom, horizontalAlignment = Alignment.CenterHorizontally) {
         if (!month || date.dayOfWeek == DayOfWeek.MONDAY) {
             Text(
@@ -255,7 +252,7 @@ private fun LabeledLine(state: OverviewState, onFocus: (Focus) -> Unit, onOpenDa
             Text(stringResource(R.string.labeled_percent, o.labeledPercent), style = MaterialTheme.typography.titleMedium.tabular)
             if (unlabeled > 0) {
                 Text(
-                    stringResource(R.string.unlabeled_amount, formatDuration(unlabeled)),
+                    stringResource(R.string.unlabeled_amount, formatDuration(unlabeled, appLocale())),
                     style = MaterialTheme.typography.bodySmall.tabular, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -299,7 +296,7 @@ private fun TagRow(row: TagTotal, max: Long, first: Boolean, last: Boolean, sele
             Box(Modifier.size(10.dp).background(tones.rail, CircleShape))
             Spacer(Modifier.width(8.dp))
             Text(row.tag.name, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, color = content)
-            Text(formatDuration(row.ms), style = MaterialTheme.typography.titleSmall.tabular, color = content)
+            Text(formatDuration(row.ms, appLocale()), style = MaterialTheme.typography.titleSmall.tabular, color = content)
         }
         Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f).height(6.dp).clip(CircleShape).background(scheme.surfaceContainerHighest)) {
@@ -318,5 +315,5 @@ private fun TagRow(row: TagTotal, max: Long, first: Boolean, last: Boolean, sele
 private fun deltaText(deltaMs: Long?): String = when {
     deltaMs == null -> ""
     abs(deltaMs) < FIVE_MINUTES -> stringResource(R.string.delta_same)
-    else -> "${if (deltaMs > 0) "▴" else "▾"} ${formatDuration(abs(deltaMs))}"
+    else -> "${if (deltaMs > 0) "▴" else "▾"} ${formatDuration(abs(deltaMs), appLocale())}"
 }

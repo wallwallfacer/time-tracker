@@ -7,8 +7,8 @@ import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +41,7 @@ import kotlinx.coroutines.runBlocking
 private object CaptureScope : CoroutineScope by CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 /** Side-key target: records a point immediately, shows a 2 s confirmation, then removes itself. */
-class MarkPointActivity : ComponentActivity() {
+class MarkPointActivity : AppCompatActivity() {
     private lateinit var repo: PointRepository
     private lateinit var publisher: LatestPublisher
     private var overlay by mutableStateOf<OverlayState?>(null)
@@ -84,7 +84,7 @@ class MarkPointActivity : ComponentActivity() {
             vibrate()
             overlay = OverlayState(
                 time = formatTime(now, ZoneId.systemDefault()),
-                previousBlock = previousAt?.let { formatDuration(now - it) },
+                previousBlock = previousAt?.let { formatDuration(now - it, resources.configuration.locales[0]) },
             )
             finishJob?.cancel()
             finishJob = launch {

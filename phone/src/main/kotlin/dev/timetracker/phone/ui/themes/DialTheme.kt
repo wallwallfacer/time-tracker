@@ -43,6 +43,7 @@ import dev.timetracker.core.formatDuration
 import dev.timetracker.core.formatElapsed
 import dev.timetracker.core.formatTime
 import dev.timetracker.phone.R
+import dev.timetracker.phone.ui.appLocale
 import dev.timetracker.phone.ui.AppTheme
 import dev.timetracker.phone.ui.Radii
 import dev.timetracker.phone.ui.TagTones
@@ -189,10 +190,10 @@ private fun DialRow(args: TimelineRowArgs) {
                 color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             if (live) {
-                Text(stringResource(R.string.in_progress, formatElapsed(ms)), style = MaterialTheme.typography.labelMedium.tabular, color = scheme.primary)
+                Text(stringResource(R.string.in_progress, formatElapsed(ms, appLocale())), style = MaterialTheme.typography.labelMedium.tabular, color = scheme.primary)
             }
         }
-        if (!live) Text(formatDuration(ms), style = MaterialTheme.typography.bodyMedium.tabular, color = ink, textAlign = TextAlign.End)
+        if (!live) Text(formatDuration(ms, appLocale()), style = MaterialTheme.typography.bodyMedium.tabular, color = ink, textAlign = TextAlign.End)
     }
 }
 

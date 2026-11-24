@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.TimeTracker.Capture" parent="android:Theme.Material.NoActionBar.TranslucentDecor">
+    <!-- AppCompat parents: AppCompatActivity, which applies the in-app language below Android 13, requires them. -->
+    <style name="Theme.TimeTracker" parent="Theme.AppCompat.Light.NoActionBar" />
+
+    <!-- The translucent decor that android:Theme.Material.NoActionBar.TranslucentDecor provided. -->
+    <style name="Theme.TimeTracker.Capture" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 </resources>

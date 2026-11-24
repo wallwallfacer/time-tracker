@@ -52,11 +52,7 @@ import dev.timetracker.core.ViewMode
 import dev.timetracker.phone.R
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
-private val OTHER_DAY = DateTimeFormatter.ofPattern("EEE, MMM d", Locale.ENGLISH)
-private val SHORT_DAY = DateTimeFormatter.ofPattern("MMM d", Locale.ENGLISH)
 
 @Composable
 fun TimelineScreen(
@@ -84,7 +80,9 @@ fun TimelineScreen(
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             val today = LocalDate.now(zone)
-            val title = if (state.day == today) "${stringResource(R.string.today)} · ${state.day.format(SHORT_DAY)}" else state.day.format(OTHER_DAY)
+            val locale = appLocale()
+            val title = if (state.day == today) "${stringResource(R.string.today)} · ${state.day.format(dateFormat(locale, "MMMd"))}"
+            else state.day.format(dateFormat(locale, "EEEMMMd"))
             PeriodHeader(title, state.day == today, onPrev, onNext, onToday, onSettings)
             ModeSwitch(ViewMode.DAY, onMode)
             if (!state.isEmpty) LocalAppTheme.current.dayHeader?.invoke(DayHeaderArgs(state, zone))
