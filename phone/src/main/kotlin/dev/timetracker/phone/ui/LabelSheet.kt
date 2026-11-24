@@ -154,8 +154,8 @@ fun LabelSheetContent(
             }
         }
         // "1h 47m · tap a time to change it" with the duration emphasised.
-        val hint = stringResource(R.string.tap_to_change, formatDuration(block.durationMs))
-        val duration = formatDuration(block.durationMs)
+        val duration = formatDuration(block.durationMs, appLocale())
+        val hint = stringResource(R.string.tap_to_change, duration)
         Text(
             buildAnnotatedString {
                 withStyle(SpanStyle(color = scheme.onSurface, fontWeight = type.labelLarge.fontWeight)) { append(duration) }

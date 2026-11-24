@@ -9,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -25,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -37,6 +40,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -57,6 +61,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -83,6 +88,8 @@ fun SettingsScreen(
     choice: ThemeChoice = ThemeChoice(RailTheme, ThemeMode.SYSTEM),
     onTheme: (String) -> Unit = {},
     onMode: (ThemeMode) -> Unit = {},
+    language: AppLanguage? = null,
+    onLanguage: (AppLanguage?) -> Unit = {},
 ) {
     val tags by vm.tags.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -96,6 +103,7 @@ fun SettingsScreen(
     var renaming by remember { mutableStateOf<Tag?>(null) }
     var deleting by remember { mutableStateOf<Pair<Tag, Int>?>(null) }
     var coloring by remember { mutableStateOf<Tag?>(null) }
+    var pickingLanguage by remember { mutableStateOf(false) }
     var markShown by remember { mutableStateOf(MarkAlias.isShown(context)) }
 
     // The CSV is built after the picker returns, so it reflects the data at write time.
@@ -155,6 +163,12 @@ fun SettingsScreen(
             }
             item {
                 Column(Modifier.padding(bottom = 18.dp)) {
+                    SectionLabel(stringResource(R.string.section_language))
+                    ValueItem(language?.nativeName ?: stringResource(R.string.language_system)) { pickingLanguage = true }
+                }
+            }
+            item {
+                Column(Modifier.padding(bottom = 18.dp)) {
                     SectionLabel(stringResource(R.string.section_side_button))
                     SwitchItem(stringResource(R.string.show_mark_icon), markShown) {
                         MarkAlias.setShown(context, it)
@@ -204,6 +218,10 @@ fun SettingsScreen(
         }
     }
 
+    if (pickingLanguage) {
+        LanguageDialog(language, onPick = { pickingLanguage = false; onLanguage(it) }, onDismiss = { pickingLanguage = false })
+    }
+
     coloring?.let { tag ->
         ModalBottomSheet(
             onDismissRequest = { coloring = null },
@@ -251,6 +269,49 @@ private fun SwitchItem(text: String, checked: Boolean, onChange: (Boolean) -> Un
         Text(text, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
         Switch(checked, onCheckedChange = null)
     }
+}
+
+/** A settings row showing its current value; tapping opens the picker. */
+@Composable
+private fun ValueItem(value: String, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().height(58.dp).clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable(onClick = onClick).padding(start = 20.dp, end = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(value, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** System default first, then each language in its own name; picking one applies it at once. */
+@Composable
+internal fun LanguageDialog(current: AppLanguage?, onPick: (AppLanguage?) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },
+        title = { Text(stringResource(R.string.section_language)) },
+        text = {
+            Column(Modifier.selectableGroup()) {
+                (listOf(null) + AppLanguage.entries).forEach { option ->
+                    Row(
+                        Modifier.fillMaxWidth().height(52.dp).clip(RoundedCornerShape(12.dp))
+                            .selectable(option == current, role = Role.RadioButton) { onPick(option) }
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(option == current, onClick = null)
+                        Text(
+                            option?.nativeName ?: stringResource(R.string.language_system),
+                            Modifier.padding(start = 12.dp),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+            }
+        },
+    )
 }
 
 @Composable

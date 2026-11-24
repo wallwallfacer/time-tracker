@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -25,6 +26,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -34,21 +36,21 @@ import androidx.compose.ui.unit.sp
 import dev.timetracker.core.ViewMode
 import dev.timetracker.core.formatElapsed
 import dev.timetracker.core.formatTime
+import dev.timetracker.phone.R
 import dev.timetracker.phone.ui.DayHeaderArgs
 import dev.timetracker.phone.ui.Focus
 import dev.timetracker.phone.ui.OverviewState
 import dev.timetracker.phone.ui.RailWeekGrid
 import dev.timetracker.phone.ui.WeekGridArgs
+import dev.timetracker.phone.ui.appLocale
+import dev.timetracker.phone.ui.dateFormat
 import dev.timetracker.phone.ui.tabular
 import dev.timetracker.phone.ui.tagTones
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 private val RING = 232.dp
 private val RING_STROKE = 26.dp
 private const val MIN_SWEEP = 3f
-private val DAY_LABEL = DateTimeFormatter.ofPattern("EEE, MMM d", Locale.ENGLISH)
 
 /** Draws one arc per span; 00:00 is at the top and time runs clockwise. */
 private fun DrawScope.arc(startFrac: Float, endFrac: Float, color: Color, stroke: Float) {
@@ -109,11 +111,11 @@ internal fun DialRing(args: DayHeaderArgs) {
             val b = live.block
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    formatElapsed(b.visibleEnd - b.visibleStart),
+                    formatElapsed(b.visibleEnd - b.visibleStart, appLocale()),
                     style = MaterialTheme.typography.headlineMedium.tabular.copy(fontSize = 24.sp, lineHeight = 28.sp), color = ink, textAlign = TextAlign.Center,
                 )
                 Text(
-                    "since ${formatTime(b.visibleStart, args.zone)}",
+                    stringResource(R.string.since_time, formatTime(b.visibleStart, args.zone)),
                     style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant,
                 )
             }
@@ -152,13 +154,15 @@ private fun MiniRing(
     val scheme = MaterialTheme.colorScheme
     val focus = state.focus
     val size: Dp = 72.dp
+    val locale = appLocale()
+    val dayLabel = remember(locale) { dateFormat(locale, "EEEMMMd") }
     Column(
-        Modifier.clickable(enabled = !future, onClick = onClick).semantics { contentDescription = col.date.format(DAY_LABEL) },
+        Modifier.clickable(enabled = !future, onClick = onClick).semantics { contentDescription = col.date.format(dayLabel) },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         Text(
-            col.date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.ENGLISH),
+            col.date.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, locale),
             style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant,
         )
         Canvas(Modifier.size(size)) {

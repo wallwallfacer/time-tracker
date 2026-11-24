@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Translations live in values-b+zh+Hans, values-b+zh+Hant, values-ja, values-ko and values-ms. Keep %1$s last in
+         previous_block and first in tap_to_change: the code bolds the duration by trimming it off that end. -->
     <string name="app_name">Time Tracker</string>
     <string name="mark_alias_label">Mark</string>
     <string name="recorded">Recorded</string>
@@ -56,7 +58,10 @@
     <string name="mode_light">Light</string>
     <string name="mode_dark">Dark</string>
     <string name="dark_only_note">%1$s is always dark.</string>
+    <string name="section_language">Language</string>
+    <string name="language_system">System default</string>
     <string name="section_side_button">Side button</string>
     <string name="show_mark_icon">Show Mark icon</string>
+    <string name="since_time">since %1$s</string>
     <string name="mark_icon_help">A second home-screen icon that records a point and closes. Bind the side button\'s double press to it. Turning it off also removes it from the side-button picker.</string>
 </resources>

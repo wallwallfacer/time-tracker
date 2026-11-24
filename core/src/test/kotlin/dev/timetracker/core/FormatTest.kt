@@ -1,6 +1,7 @@
 package dev.timetracker.core
 
 import java.time.ZoneId
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -26,6 +27,28 @@ class FormatTest {
         assertEquals("12m 08s", formatElapsed(728_999))
         assertEquals("1h 5m 03s", formatElapsed(3_903_000))
         assertEquals("0s", formatElapsed(-1))
+    }
+
+    private fun both(tag: String) = Locale.forLanguageTag(tag).let {
+        listOf(formatDuration(42_000, it), formatDuration(35 * 60_000L, it), formatDuration(190 * 60_000L, it), formatElapsed(3_903_000, it))
+    }
+
+    @Test fun `units follow the language`() {
+        assertEquals(listOf("42s", "35m", "3h 10m", "1h 5m 03s"), both("en"))
+        assertEquals(listOf("42秒", "35分", "3小时10分", "1小时5分03秒"), both("zh-Hans"))
+        assertEquals(listOf("42秒", "35分", "3小時10分", "1小時5分03秒"), both("zh-Hant"))
+        assertEquals(listOf("42秒", "35分", "3時間10分", "1時間5分03秒"), both("ja"))
+        assertEquals(listOf("42초", "35분", "3시간 10분", "1시간 5분 03초"), both("ko"))
+        assertEquals(listOf("42s", "35m", "3j 10m", "1j 5m 03s"), both("ms"))
+        assertEquals(both("en"), both("fr")) // no units of its own
+    }
+
+    @Test fun `chinese without a script follows the region`() {
+        assertEquals("3小時10分", formatDuration(190 * 60_000L, Locale.forLanguageTag("zh-HK")))
+        assertEquals("3小時10分", formatDuration(190 * 60_000L, Locale.forLanguageTag("zh-TW")))
+        assertEquals("3小时10分", formatDuration(190 * 60_000L, Locale.forLanguageTag("zh-CN")))
+        assertEquals("3小时10分", formatDuration(190 * 60_000L, Locale.forLanguageTag("zh-SG")))
+        assertEquals("3小时10分", formatDuration(190 * 60_000L, Locale.forLanguageTag("zh")))
     }
 
     @Test fun `formatTime uses zone`() {

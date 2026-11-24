@@ -37,4 +37,9 @@ class RenderConfirmTest {
     @Test fun recorded() = render("watch-recorded", recorded = true)
 
     @Test fun notRecorded() = render("watch-not-recorded", recorded = false)
+
+    // Translations with the longest units and status text, to check they still fit the round screen.
+    @Test @Config(qualifiers = "+ko") fun recordedKorean() = render("watch-recorded-ko", recorded = true)
+    @Test @Config(qualifiers = "+ja") fun notRecordedJapanese() = render("watch-not-recorded-ja", recorded = false)
+    @Test @Config(qualifiers = "+ms") fun recordedMalay() = render("watch-recorded-ms", recorded = true)
 }

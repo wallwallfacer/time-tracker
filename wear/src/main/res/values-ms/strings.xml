@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Penjejak Masa</string>
+    <string name="recorded">Direkodkan</string>
+    <string name="not_recorded">Tidak direkodkan</string>
+    <string name="previous_block">Blok sebelumnya %1$s</string>
+    <string name="complication_description">Masa sejak tanda terakhir. Ketik untuk menanda.</string>
+</resources>

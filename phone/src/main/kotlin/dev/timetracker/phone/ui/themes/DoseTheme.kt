@@ -56,6 +56,7 @@ import dev.timetracker.core.formatDuration
 import dev.timetracker.core.formatElapsed
 import dev.timetracker.core.formatTime
 import dev.timetracker.phone.R
+import dev.timetracker.phone.ui.appLocale
 import dev.timetracker.phone.ui.AppTheme
 import dev.timetracker.phone.ui.RailWeekGrid
 import dev.timetracker.phone.ui.Radii
@@ -235,10 +236,10 @@ private fun DoseRow(args: TimelineRowArgs) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (!current) Text(formatDuration(ms), style = MonoStyle(13).copy(color = scheme.onSurfaceVariant))
+                if (!current) Text(formatDuration(ms, appLocale()), style = MonoStyle(13).copy(color = scheme.onSurfaceVariant))
             }
             if (current) {
-                Text(stringResource(R.string.in_progress, formatElapsed(ms)), style = MonoStyle(12).copy(color = scheme.primary))
+                Text(stringResource(R.string.in_progress, formatElapsed(ms, appLocale())), style = MonoStyle(12).copy(color = scheme.primary))
             }
         }
     }

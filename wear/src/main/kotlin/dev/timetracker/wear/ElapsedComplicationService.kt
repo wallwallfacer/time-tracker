@@ -18,6 +18,7 @@ import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUp
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
 import com.google.android.gms.wearable.Wearable
+import dev.timetracker.core.formatDuration
 import java.time.Instant
 
 /** Shows the time since the latest known point; tapping it opens [MarkActivity], which records a point. */
@@ -40,7 +41,7 @@ class ElapsedComplicationService : SuspendingComplicationDataSourceService() {
     }
 
     override fun getPreviewData(type: ComplicationType): ComplicationData? =
-        if (type == ComplicationType.SHORT_TEXT) build(PlainComplicationText.Builder("47m").build()) else null
+        if (type == ComplicationType.SHORT_TEXT) build(PlainComplicationText.Builder(formatDuration(47 * 60_000L, resources.configuration.locales[0])).build()) else null
 
     private fun build(text: ComplicationText): ComplicationData {
         val tap = PendingIntent.getActivity(

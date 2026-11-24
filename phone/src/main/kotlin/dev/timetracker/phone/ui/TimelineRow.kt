@@ -132,11 +132,11 @@ fun TimelineRowItem(row: TimelineRow, zone: ZoneId, onClick: () -> Unit, onLongC
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (!current) {
-                    Text(formatDuration(ms), style = MaterialTheme.typography.bodyMedium.tabular, color = ink.copy(alpha = 0.9f))
+                    Text(formatDuration(ms, appLocale()), style = MaterialTheme.typography.bodyMedium.tabular, color = ink.copy(alpha = 0.9f))
                 }
             }
             if (current) {
-                LiveLine(formatElapsed(ms))
+                LiveLine(formatElapsed(ms, appLocale()))
             } else if (size.compressed) {
                 Spacer(Modifier.weight(1f))
                 Text(stringResource(R.string.compressed), style = MaterialTheme.typography.bodySmall, color = ink.copy(alpha = 0.78f))
