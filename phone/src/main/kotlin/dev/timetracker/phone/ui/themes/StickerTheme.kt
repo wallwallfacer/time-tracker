@@ -79,6 +79,7 @@ import dev.timetracker.phone.ui.railSize
 import dev.timetracker.phone.ui.stripes
 import dev.timetracker.phone.ui.tabular
 import dev.timetracker.phone.ui.tagTones
+import java.time.format.DateTimeFormatter
 
 /** The few colours the scheme has no role for. */
 private object Sticker {
@@ -326,7 +327,8 @@ private fun StickerWeekGrid(args: WeekGridArgs) {
     val shape = RoundedCornerShape(10.dp)
     val locale = appLocale()
     val columnDay = remember(locale) { dateFormat(locale, "EEEMMMd") }
-    val stripLabel = remember(locale) { dateFormat(locale, "EEEd") }
+    // English keeps the strip's original "Tue 24"; CLDR would give "24 Tue".
+    val stripLabel = remember(locale) { if (locale.language == "en") DateTimeFormatter.ofPattern("EEE d", locale) else dateFormat(locale, "EEEd") }
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
         state.overview.days.forEach { col ->
             val future = col.date > args.today

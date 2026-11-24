@@ -1,7 +1,7 @@
 package dev.timetracker.phone.ui
 
 import android.icu.text.DateIntervalFormat
-import android.icu.util.Calendar
+import android.icu.util.GregorianCalendar
 import android.icu.util.TimeZone
 import android.icu.util.ULocale
 import android.text.format.DateFormat
@@ -19,7 +19,10 @@ import java.util.Locale
  */
 @Composable
 @ReadOnlyComposable
-fun appLocale(): Locale = LocalConfiguration.current.locales[0]
+fun appLocale(): Locale = supportedOrEnglish(LocalConfiguration.current.locales[0])
+
+/** [locale] when the app is translated into it, else English, so dates and units match the (English) fallback text. */
+internal fun supportedOrEnglish(locale: Locale): Locale = if (AppLanguage.of(locale) != null) locale else Locale.ENGLISH
 
 /** A formatter for a CLDR [skeleton] (`MMMd`, `EEEMMMd`), in [locale]'s own field order and words: `Nov 24`, `11月24日`. */
 fun dateFormat(locale: Locale, skeleton: String): DateTimeFormatter =
@@ -28,7 +31,8 @@ fun dateFormat(locale: Locale, skeleton: String): DateTimeFormatter =
 /** The inclusive day range [from]..[to] for a CLDR [skeleton]: `Oct 19 – 25`, `Oct 26 – Nov 1`, `10月19日至25日`. */
 fun dateRange(locale: Locale, skeleton: String, from: LocalDate, to: LocalDate): String {
     val utc = TimeZone.GMT_ZONE
-    fun cal(d: LocalDate) = Calendar.getInstance(utc, ULocale.forLocale(locale)).apply {
+    // Gregorian whatever the locale's default calendar (th-TH would count Buddhist years).
+    fun cal(d: LocalDate) = GregorianCalendar(utc, ULocale.forLocale(locale)).apply {
         clear()
         set(d.year, d.monthValue - 1, d.dayOfMonth)
     }

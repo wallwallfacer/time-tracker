@@ -42,6 +42,21 @@ class LocaleFormatsTest {
         assertEquals("11月24日(火)", today.format(dateFormat(Locale.JAPANESE, "EEEMMMd")))
     }
 
+    @Test fun `untranslated languages format like english`() {
+        listOf("fr", "fa-IR", "th-TH").forEach { tag ->
+            val locale = supportedOrEnglish(Locale.forLanguageTag(tag))
+            assertEquals(Locale.ENGLISH, locale)
+            assertEquals("Nov 23\u2009–\u200929", periodTitle(ViewMode.WEEK, today, today, locale))
+        }
+        assertEquals(Locale.forLanguageTag("en-GB"), supportedOrEnglish(Locale.forLanguageTag("en-GB")))
+        assertEquals(Locale.forLanguageTag("zh-TW"), supportedOrEnglish(Locale.forLanguageTag("zh-TW")))
+    }
+
+    @Test fun `ranges stay gregorian whatever the locale's calendar`() {
+        val range = dateRange(Locale.forLanguageTag("th-TH"), "yMMMd", today, today.plusDays(2))
+        assert("2026" in range) { range }
+    }
+
     @Test @Config(qualifiers = "zh-rHK") fun `hong kong chinese gets traditional strings`() = assertEquals("設定", string(R.string.settings))
     @Test @Config(qualifiers = "zh-rTW") fun `taiwan chinese gets traditional strings`() = assertEquals("設定", string(R.string.settings))
     @Test @Config(qualifiers = "zh-rCN") fun `mainland chinese gets simplified strings`() = assertEquals("设置", string(R.string.settings))
